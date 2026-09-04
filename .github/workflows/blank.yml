@@ -1,0 +1,19 @@
+name: YouTube Automation
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  automation-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test cloud automation
+        run: |
+          echo "🔥 YouTube automation is running in the cloud!"
+          echo "PC status does not matter."
+          echo "Current time:"
+          date
