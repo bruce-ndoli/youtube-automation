@@ -1,156 +1,82 @@
-name: YouTube Automation
-
-on:
-  workflow_dispatch:
-
-jobs:
-  create-short:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          python3 -m pip install piper-tts faster-whisper
-
-      - name: Install FFmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-
-      - name: Fetch top news headline
-        run: |
-          python3 - <<'EOF'
-          import urllib.request
-          import xml.etree.ElementTree as ET
-          import re
-
-          url = "https://news.google.com/rss/search?q=AI+OR+technology&hl=en-US&gl=US&ceid=US:en"
-          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-          with urllib.request.urlopen(req) as resp:
-              data = resp.read()
-
-          root = ET.fromstring(data)
-          item = root.find("./channel/item")
-          title = item.find("title").text.strip()
-          desc_raw = item.find("description").text or ""
-          desc = re.sub("<[^<]+?>", "", desc_raw).strip()
-
-          with open("headline.txt", "w") as f:
-              f.write(title + "\n\n" + desc)
-          EOF
-
       - name: Generate script with AI
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
           python3 - <<'EOF'
           import urllib.request
-          import urllib.parse
+          import urllib.error
+          import json
+          import os
+          import sys
 
           headline = open("headline.txt").read().strip()
+          api_key = os.environ.get("GROQ_API_KEY")
+
+          if not api_key:
+              print("ERROR: GROQ_API_KEY secret is missing.")
+              sys.exit(1)
 
           prompt = (
-              "Write a punchy 40-second YouTube Shorts voiceover script "
-              "(100-120 words) summarizing this tech/AI news for a general "
-              "audience. Plain spoken narration only, no hashtags, no emojis, "
-              "no stage directions:\n\n" + headline
+              "You are writing a YouTube Shorts voiceover script for a tech/AI "
+              "news channel. Rules:\n"
+              "- Start with a strong hook in the first sentence (a surprising "
+              "fact, a question, or 'Here's what just happened...').\n"
+              "- Explain the news in simple, punchy, spoken language (not "
+              "written/formal).\n"
+              "- End with a short line encouraging the viewer to follow/"
+              "subscribe for more AI news, worked naturally into the ending "
+              "(not a hard sales pitch).\n"
+              "- Plain narration only: no hashtags, no emojis, no headers, no "
+              "stage directions, no asterisks.\n"
+              "- Length: strictly between 90 and 140 words total. Do not "
+              "exceed 140 words.\n\n"
+              "News:\n" + headline
           )
 
-          url = "https://text.pollinations.ai/" + urllib.parse.quote(prompt)
-          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-          with urllib.request.urlopen(req, timeout=60) as resp:
-              script = resp.read().decode("utf-8").strip()
+          url = "https://api.groq.com/openai/v1/chat/completions"
+          body = json.dumps({
+              "model": "llama-3.3-70b-versatile",
+              "messages": [{"role": "user", "content": prompt}],
+              "temperature": 0.8,
+              "max_tokens": 300
+          }).encode("utf-8")
+
+          req = urllib.request.Request(
+              url,
+              data=body,
+              headers={
+                  "Content-Type": "application/json",
+                  "Authorization": f"Bearer {api_key}"
+              }
+          )
+
+          try:
+              with urllib.request.urlopen(req, timeout=60) as resp:
+                  result = json.loads(resp.read().decode("utf-8"))
+          except urllib.error.HTTPError as e:
+              print(f"ERROR: Groq API returned {e.code}: {e.read().decode('utf-8')}")
+              sys.exit(1)
+          except Exception as e:
+              print(f"ERROR: Groq request failed: {e}")
+              sys.exit(1)
+
+          try:
+              script = result["choices"][0]["message"]["content"].strip()
+          except (KeyError, IndexError):
+              print(f"ERROR: Unexpected Groq response: {json.dumps(result)}")
+              sys.exit(1)
+
+          script = script.replace("*", "").replace("#", "")
+
+          words = script.split()
+          if len(words) > 140:
+              script = " ".join(words[:140])
+          elif len(words) < 40:
+              print(f"ERROR: Script too short ({len(words)} words) — likely a bad response.")
+              sys.exit(1)
 
           with open("script.txt", "w") as f:
               f.write(script)
+
+          print(f"Script generated: {len(script.split())} words")
           EOF
-
-      - name: Download Piper voice
-        run: |
-          mkdir -p models
-          curl -L "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx?download=true" -o models/en_US-lessac-medium.onnx
-          curl -L "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json?download=true" -o models/en_US-lessac-medium.onnx.json
-
-      - name: Generate voice
-        run: |
-          python3 -m piper \
-            -m models/en_US-lessac-medium.onnx \
-            -i script.txt \
-            -f voiceover.wav
-
-      - name: Get audio duration
-        id: audio
-        run: |
-          DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 voiceover.wav)
-          echo "duration=$DUR" >> "$GITHUB_OUTPUT"
-
-      - name: Generate background image
-        run: |
-          python3 - <<'EOF'
-          import urllib.request
-          import urllib.parse
-
-          script = open("script.txt").read().strip()
-
-          image_prompt = (
-              "Vertical cinematic abstract background representing: " +
-              script[:200] +
-              ", tech AI theme, no text, no letters, no words, digital art, dark moody colors"
-          )
-
-          url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(image_prompt) + "?width=1080&height=1920&nologo=true"
-          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-          with urllib.request.urlopen(req, timeout=120) as resp:
-              data = resp.read()
-
-          with open("background.jpg", "wb") as f:
-              f.write(data)
-          EOF
-
-      - name: Generate real-timed captions
-        run: |
-          python3 - <<'EOF'
-          from faster_whisper import WhisperModel
-          import math
-
-          model = WhisperModel("small", device="cpu", compute_type="int8")
-          segments, _ = model.transcribe("voiceover.wav", word_timestamps=True)
-
-          def fmt(t):
-              h = int(t // 3600)
-              m = int((t % 3600) // 60)
-              s = int(t % 60)
-              ms = int((t - math.floor(t)) * 1000)
-              return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-
-          words = []
-          for seg in segments:
-              for w in seg.words:
-                  words.append((w.start, w.end, w.word.strip()))
-
-          chunk_size = 5
-          with open("captions.srt", "w") as f:
-              idx = 1
-              for i in range(0, len(words), chunk_size):
-                  group = words[i:i+chunk_size]
-                  start = group[0][0]
-                  end = group[-1][1]
-                  text = " ".join(w[2] for w in group)
-                  f.write(f"{idx}\n{fmt(start)} --> {fmt(end)}\n{text}\n\n")
-                  idx += 1
-          EOF
-
-      - name: Build vertical short with captions
-        run: |
-          DUR="${{ steps.audio.outputs.duration }}"
-          FRAMES=$(python3 -c "import math; print(math.ceil(float('$DUR') * 25))")
-          ffmpeg -loop 1 -i background.jpg -i voiceover.wav \
-            -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,zoompan=z='min(zoom+0.0005,1.2)':d=$FRAMES:s=1080x1920:fps=25,subtitles=captions.srt:force_style='FontName=DejaVu Sans,FontSize=16,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=1,Outline=3,Bold=1,Alignment=2,MarginV=120'" \
-            -c:v libx264 -c:a aac -shortest -pix_fmt yuv420p short.mp4
-
-      - name: Upload short
-        uses: actions/upload-artifact@v4
-        with:
-          name: short
-          path: short.mp4
