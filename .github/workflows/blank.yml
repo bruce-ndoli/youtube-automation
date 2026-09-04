@@ -34,24 +34,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Get audio duration
-        id: audio
+      - name: Install faster-whisper
         run: |
-          DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 voiceover.wav)
-          echo "duration=$DUR" >> "$GITHUB_OUTPUT"
+          python3 -m pip install faster-whisper
 
-      - name: Generate fake-timed captions
+      - name: Generate real-timed captions
         run: |
           python3 - <<'EOF'
+          from faster_whisper import WhisperModel
           import math
 
-          duration = float("${{ steps.audio.outputs.duration }}")
-          text = open("script.txt").read().strip()
-          words = text.split()
-
-          chunk_size = 5
-          chunks = [" ".join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
-          per_chunk = duration / max(len(chunks), 1)
+          model = WhisperModel("small", device="cpu", compute_type="int8")
+          segments, _ = model.transcribe("voiceover.wav", word_timestamps=True)
 
           def fmt(t):
               h = int(t // 3600)
@@ -60,11 +54,21 @@ jobs:
               ms = int((t - math.floor(t)) * 1000)
               return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
+          words = []
+          for seg in segments:
+              for w in seg.words:
+                  words.append((w.start, w.end, w.word.strip()))
+
+          chunk_size = 5
           with open("captions.srt", "w") as f:
-              for i, chunk in enumerate(chunks):
-                  start = i * per_chunk
-                  end = (i + 1) * per_chunk
-                  f.write(f"{i+1}\n{fmt(start)} --> {fmt(end)}\n{chunk}\n\n")
+              idx = 1
+              for i in range(0, len(words), chunk_size):
+                  group = words[i:i+chunk_size]
+                  start = group[0][0]
+                  end = group[-1][1]
+                  text = " ".join(w[2] for w in group)
+                  f.write(f"{idx}\n{fmt(start)} --> {fmt(end)}\n{text}\n\n")
+                  idx += 1
           EOF
 
       - name: Build vertical short with captions
