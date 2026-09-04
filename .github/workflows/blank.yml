@@ -7,13 +7,15 @@ on:
     - cron: "0 */6 * * *"
 
 jobs:
-  automation-test:
+  research:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test cloud automation
+      - name: Get latest AI news
         run: |
-          echo "🔥 YouTube automation is running in the cloud!"
-          echo "PC status does not matter."
-          echo "Current time:"
-          date
+          curl -L "https://news.google.com/rss/search?q=AI%20robots%20in%20factories&hl=en-US&gl=US&ceid=US:en" -o news.xml
+
+      - name: Show news
+        run: |
+          echo "===== LATEST NEWS ====="
+          head -100 news.xml
