@@ -42,12 +42,15 @@ jobs:
               f.write(title + "\n\n" + desc)
           EOF
 
-      - name: Generate script with AI
+      - name: Generate script with local AI
         run: |
+          python3 -m pip install llama-cpp-python --prefer-binary
+
+          mkdir -p llm
+          curl -L "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf?download=true" -o llm/model.gguf
+
           python3 - <<'EOF'
-          import urllib.request
-          import urllib.error
-          import urllib.parse
+          from llama_cpp import Llama
           import sys
 
           headline = open("headline.txt").read().strip()
@@ -62,38 +65,26 @@ jobs:
               "AI news, worked naturally into the ending, not a hard sales "
               "pitch. Plain narration only: no hashtags, no emojis, no "
               "headers, no stage directions, no asterisks. Length: strictly "
-              "between 90 and 140 words total, do not exceed 140 words. "
-              "News: " + headline
+              "between 90 and 140 words total, do not exceed 140 words.\n\n"
+              f"News: {headline}\n\nScript:"
           )
 
-          url = "https://text.pollinations.ai/" + urllib.parse.quote(prompt)
-          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+          llm = Llama(model_path="llm/model.gguf", n_ctx=2048, verbose=False)
+          output = llm(
+              prompt,
+              max_tokens=250,
+              temperature=0.8,
+              stop=["News:", "\n\n\n"]
+          )
 
-          script = None
-          last_error = None
-
-          for attempt in range(3):
-              try:
-                  with urllib.request.urlopen(req, timeout=90) as resp:
-                      script = resp.read().decode("utf-8").strip()
-                  if script:
-                      break
-              except urllib.error.HTTPError as e:
-                  last_error = f"HTTP {e.code}: {e.read().decode('utf-8', errors='ignore')}"
-              except Exception as e:
-                  last_error = str(e)
-
-          if not script:
-              print(f"ERROR: Pollinations text request failed after 3 attempts: {last_error}")
-              sys.exit(1)
-
+          script = output["choices"][0]["text"].strip()
           script = script.replace("*", "").replace("#", "").strip()
 
           words = script.split()
           if len(words) > 140:
               script = " ".join(words[:140])
           elif len(words) < 40:
-              print(f"ERROR: Script too short ({len(words)} words) — response was: {script[:200]}")
+              print(f"ERROR: Script too short ({len(words)} words) — output was: {script[:200]}")
               sys.exit(1)
 
           with open("script.txt", "w") as f:
