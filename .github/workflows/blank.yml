@@ -3,19 +3,29 @@ name: YouTube Automation
 on:
   workflow_dispatch:
 
-  schedule:
-    - cron: "0 */6 * * *"
-
 jobs:
-  research:
+  ai-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get latest AI news
+      - name: Install Ollama
         run: |
-          curl -L "https://news.google.com/rss/search?q=AI%20robots%20in%20factories&hl=en-US&gl=US&ceid=US:en" -o news.xml
+          curl -fsSL https://ollama.com/install.sh | sh
 
-      - name: Show news
+      - name: Start Ollama
         run: |
-          echo "===== LATEST NEWS ====="
-          head -100 news.xml
+          ollama serve > ollama.log 2>&1 &
+          sleep 5
+
+      - name: Download AI model
+        run: |
+          ollama pull tinyllama
+
+      - name: Generate test script
+        run: |
+          ollama run tinyllama "Write a 30 second YouTube Shorts script about AI robots working in factories. Use simple English. Start with a strong hook."
+
+      - name: Show Ollama log if needed
+        if: always()
+        run: |
+          cat ollama.log || true
