@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  create-voice:
+  create-short:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,8 +29,18 @@ jobs:
             -i script.txt \
             -f voiceover.wav
 
-      - name: Upload voice file
-        uses: actions/upload-artifact@v7
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Build vertical short
+        run: |
+          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=30 -i voiceover.wav \
+            -c:v libx264 -c:a aac -shortest -pix_fmt yuv420p short.mp4
+
+      - name: Upload short
+        uses: actions/upload-artifact@v4
         with:
-          name: voiceover
-          path: voiceover.wav
+          name: short
+          path: short.mp4
