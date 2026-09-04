@@ -34,10 +34,44 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Build vertical short
+      - name: Get audio duration
+        id: audio
+        run: |
+          DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 voiceover.wav)
+          echo "duration=$DUR" >> "$GITHUB_OUTPUT"
+
+      - name: Generate fake-timed captions
+        run: |
+          python3 - <<'EOF'
+          import math
+
+          duration = float("${{ steps.audio.outputs.duration }}")
+          text = open("script.txt").read().strip()
+          words = text.split()
+
+          chunk_size = 5
+          chunks = [" ".join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
+          per_chunk = duration / max(len(chunks), 1)
+
+          def fmt(t):
+              h = int(t // 3600)
+              m = int((t % 3600) // 60)
+              s = int(t % 60)
+              ms = int((t - math.floor(t)) * 1000)
+              return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+          with open("captions.srt", "w") as f:
+              for i, chunk in enumerate(chunks):
+                  start = i * per_chunk
+                  end = (i + 1) * per_chunk
+                  f.write(f"{i+1}\n{fmt(start)} --> {fmt(end)}\n{chunk}\n\n")
+          EOF
+
+      - name: Build vertical short with captions
         run: |
           ffmpeg -f lavfi -i "gradients=s=1080x1920:d=30:speed=0.02:c0=0x1a1a2e:c1=0x16213e" \
             -i voiceover.wav \
+            -vf "subtitles=captions.srt:force_style='FontName=DejaVu Sans,FontSize=16,PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,BorderStyle=1,Outline=3,Bold=1,Alignment=2,MarginV=120'" \
             -c:v libx264 -c:a aac -shortest -pix_fmt yuv420p short.mp4
 
       - name: Upload short
