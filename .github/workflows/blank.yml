@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  ai-test:
+  create-script:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,11 +21,33 @@ jobs:
         run: |
           ollama pull tinyllama
 
-      - name: Generate test script
+      - name: Get latest news
         run: |
-          ollama run tinyllama "Write a 30 second YouTube Shorts script about AI robots working in factories. Use simple English. Start with a strong hook."
+          curl -L "https://news.google.com/rss/search?q=AI%20robots%20in%20factories&hl=en-US&gl=US&ceid=US:en" -o news.xml
 
-      - name: Show Ollama log if needed
-        if: always()
+      - name: Generate script
         run: |
-          cat ollama.log || true
+          NEWS=$(cat news.xml)
+
+          PROMPT="You are a YouTube Shorts scriptwriter.
+
+          Write an engaging 30 to 60 second narration based ONLY on the news below.
+
+          Rules:
+          - Start with a strong hook.
+          - Use simple English.
+          - Do not invent facts.
+          - Do not use headings.
+          - Do not use bullet points.
+          - Do not use emojis.
+          - Write ONLY the narration.
+
+          NEWS:
+          $NEWS"
+
+          ollama run tinyllama "$PROMPT" > script.txt
+
+      - name: Show generated script
+        run: |
+          echo "===== GENERATED SCRIPT ====="
+          cat script.txt
