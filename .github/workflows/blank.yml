@@ -36,7 +36,8 @@ jobs:
 
       - name: Build vertical short
         run: |
-          ffmpeg -f lavfi -i color=c=black:s=1080x1920:d=30 -i voiceover.wav \
+          ffmpeg -f lavfi -i "gradients=s=1080x1920:d=30:speed=0.02:c0=0x1a1a2e:c1=0x16213e" \
+            -i voiceover.wav \
             -c:v libx264 -c:a aac -shortest -pix_fmt yuv420p short.mp4
 
       - name: Upload short
