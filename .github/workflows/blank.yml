@@ -126,3 +126,7 @@ jobs:
               body = " ".join(words[:100])
           elif len(words) < 30:
               print(f"ERROR: Script body too short ({len(words)} words) — output was: {body[:200]}")
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 20 * * *'
