@@ -13,60 +13,99 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python3 -m pip install piper-tts faster-whisper
+          python3 -m pip install piper-tts faster-whisper llama-cpp-python --prefer-binary
 
       - name: Install FFmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Fetch top news headline
+      - name: Download local AI model
+        run: |
+          mkdir -p llm
+          curl -L "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf?download=true" -o llm/model.gguf
+
+      - name: Choose content type and topic
         run: |
           python3 - <<'EOF'
+          import datetime
           import urllib.request
           import xml.etree.ElementTree as ET
           import re
+          import random
 
-          url = "https://news.google.com/rss/search?q=AI+OR+technology&hl=en-US&gl=US&ceid=US:en"
-          req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-          with urllib.request.urlopen(req) as resp:
-              data = resp.read()
+          # Rotation: 5 days news, 2 days "make money with AI" (roughly matches
+          # the earlier plan of mostly news + 1-2x/week money content)
+          day = datetime.datetime.utcnow().weekday()  # 0=Mon ... 6=Sun
+          content_type = "money" if day in (5, 6) else "news"
 
-          root = ET.fromstring(data)
-          item = root.find("./channel/item")
-          title = item.find("title").text.strip()
-          desc_raw = item.find("description").text or ""
-          desc = re.sub("<[^<]+?>", "", desc_raw).strip()
+          if content_type == "news":
+              url = "https://news.google.com/rss/search?q=AI+OR+technology&hl=en-US&gl=US&ceid=US:en"
+              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              with urllib.request.urlopen(req) as resp:
+                  data = resp.read()
+              root = ET.fromstring(data)
+              item = root.find("./channel/item")
+              title = item.find("title").text.strip()
+              desc_raw = item.find("description").text or ""
+              desc = re.sub("<[^<]+?>", "", desc_raw).strip()
+              topic = title + "\n\n" + desc
+          else:
+              money_topics = [
+                  "Freelancing using AI writing and image tools to land quick gigs",
+                  "Building and selling simple AI-powered chatbots for small businesses",
+                  "Using AI to automate content creation for social media clients",
+                  "Reselling AI-generated designs or templates online",
+                  "Using AI tools to speed up freelance video editing work",
+                  "Creating and selling AI-assisted online courses",
+                  "Using AI to find and validate profitable side hustle ideas",
+              ]
+              random.seed(datetime.date.today().toordinal())
+              topic = random.choice(money_topics)
 
-          with open("headline.txt", "w") as f:
-              f.write(title + "\n\n" + desc)
+          with open("topic.txt", "w") as f:
+              f.write(topic)
+          with open("content_type.txt", "w") as f:
+              f.write(content_type)
+
+          print(f"Content type: {content_type}")
+          print(f"Topic: {topic}")
           EOF
 
       - name: Generate script with local AI
         run: |
-          python3 -m pip install llama-cpp-python --prefer-binary
-
-          mkdir -p llm
-          curl -L "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf?download=true" -o llm/model.gguf
-
           python3 - <<'EOF'
           from llama_cpp import Llama
           import sys, re, random
 
-          headline = open("headline.txt").read().strip()
+          topic = open("topic.txt").read().strip()
+          content_type = open("content_type.txt").read().strip()
+
+          if content_type == "news":
+              rules = (
+                  "You are writing the BODY ONLY of a YouTube Shorts voiceover "
+                  "script for a tech/AI news channel. Start with a strong hook "
+                  "(a surprising fact or a question). Explain the news in "
+                  "simple, punchy, spoken language."
+              )
+          else:
+              rules = (
+                  "You are writing the BODY ONLY of a YouTube Shorts voiceover "
+                  "script about making money using AI. Start with a strong "
+                  "hook (a surprising income fact or a question). Explain ONE "
+                  "specific, realistic way someone can use AI to earn money, "
+                  "in simple, punchy, spoken language. Do NOT promise "
+                  "guaranteed income or use hype phrases like 'get rich quick'."
+              )
 
           prompt = (
-              "You are writing the BODY ONLY of a YouTube Shorts voiceover "
-              "script for a tech/AI news channel. Rules: Start with a strong "
-              "hook in the first sentence (a surprising fact, a question, or "
-              "'Here's what just happened...'). Explain the news in simple, "
-              "punchy, spoken language, not written or formal language. "
-              "Do NOT include a call to action, do NOT mention subscribing "
+              rules +
+              " Do NOT include a call to action, do NOT mention subscribing "
               "or following, do NOT add an ending line, do NOT include any "
               "labels, headers, brackets, or meta text such as 'Script:' or "
               "'The End'. Output ONLY the plain spoken narration body, "
               "nothing else. Length: strictly between 70 and 100 words.\n\n"
-              f"News: {headline}\n\nNarration body:"
+              f"Topic: {topic}\n\nNarration body:"
           )
 
           llm = Llama(model_path="llm/model.gguf", n_ctx=2048, verbose=False)
@@ -74,12 +113,10 @@ jobs:
               prompt,
               max_tokens=200,
               temperature=0.8,
-              stop=["News:", "\n\n\n", "Script:", "[", "The End"]
+              stop=["Topic:", "\n\n\n", "Script:", "[", "The End"]
           )
 
           body = output["choices"][0]["text"].strip()
-
-          # Clean up any stray meta-text the model might still slip in
           body = re.sub(r'(?i)^(script|narration body)\s*:\s*', '', body)
           body = re.sub(r'\[[^\]]*\]', '', body)
           body = body.replace("*", "").replace("#", "").strip().strip('"')
@@ -89,155 +126,3 @@ jobs:
               body = " ".join(words[:100])
           elif len(words) < 30:
               print(f"ERROR: Script body too short ({len(words)} words) — output was: {body[:200]}")
-              sys.exit(1)
-
-          # Always append a correct, fixed subscribe line — never left to the model
-          ctas = [
-              "If you found this interesting, follow for more AI news every day.",
-              "Follow along so you never miss the next big AI story.",
-              "Hit follow for more quick AI and tech updates like this one.",
-          ]
-          script = body.rstrip(".") + ". " + random.choice(ctas)
-
-          with open("script.txt", "w") as f:
-              f.write(script)
-
-          print(f"Script generated: {len(script.split())} words")
-          EOF
-
-      - name: Download Piper voice
-        run: |
-          mkdir -p models
-          curl -L "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx?download=true" -o models/en_US-lessac-medium.onnx
-          curl -L "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json?download=true" -o models/en_US-lessac-medium.onnx.json
-
-      - name: Generate voice
-        run: |
-          python3 -m piper \
-            -m models/en_US-lessac-medium.onnx \
-            -i script.txt \
-            -f voiceover.wav
-
-      - name: Generate background images
-        run: |
-          python3 - <<'EOF'
-          import urllib.request
-          import urllib.parse
-          import random
-
-          script = open("script.txt").read().strip()
-          base = script[:150]
-
-          styles = [
-              "wide abstract digital landscape",
-              "close-up glowing particle network",
-              "abstract flowing data streams",
-          ]
-
-          for i, style in enumerate(styles):
-              seed = random.randint(1, 999999)
-              prompt = (
-                  f"{style} representing: {base}, tech AI theme, no text, "
-                  "no letters, no words, digital art, dark moody colors"
-              )
-              url = (
-                  "https://image.pollinations.ai/prompt/"
-                  + urllib.parse.quote(prompt)
-                  + f"?width=1080&height=1920&nologo=true&seed={seed}"
-              )
-              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-              with urllib.request.urlopen(req, timeout=120) as resp:
-                  data = resp.read()
-              with open(f"background{i+1}.jpg", "wb") as f:
-                  f.write(data)
-          EOF
-
-      - name: Generate real-timed captions
-        run: |
-          python3 - <<'EOF'
-          from faster_whisper import WhisperModel
-          import math
-
-          model = WhisperModel("small", device="cpu", compute_type="int8")
-          segments, _ = model.transcribe("voiceover.wav", word_timestamps=True)
-
-          def fmt(t):
-              h = int(t // 3600)
-              m = int((t % 3600) // 60)
-              s = int(t % 60)
-              ms = int((t - math.floor(t)) * 1000)
-              return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-
-          words = []
-          for seg in segments:
-              for w in seg.words:
-                  words.append((w.start, w.end, w.word.strip()))
-
-          chunk_size = 5
-          with open("captions.srt", "w") as f:
-              idx = 1
-              for i in range(0, len(words), chunk_size):
-                  group = words[i:i+chunk_size]
-                  start = group[0][0]
-                  end = group[-1][1]
-                  text = " ".join(w[2] for w in group)
-                  f.write(f"{idx}\n{fmt(start)} --> {fmt(end)}\n{text}\n\n")
-                  idx += 1
-          EOF
-
-      - name: Build vertical short with captions
-        run: |
-          python3 - <<'EOF'
-          import subprocess
-          import math
-
-          dur = float(subprocess.run(
-              ["ffprobe", "-v", "error", "-show_entries", "format=duration",
-               "-of", "csv=p=0", "voiceover.wav"],
-              capture_output=True, text=True
-          ).stdout.strip())
-
-          fps = 25
-          n_images = 3
-          seg_dur = dur / n_images
-          seg_frames = [math.ceil(seg_dur * fps)] * n_images
-          # give any rounding remainder to the last segment
-          total_frames = math.ceil(dur * fps)
-          seg_frames[-1] += total_frames - sum(seg_frames)
-
-          filter_parts = []
-          for i, frames in enumerate(seg_frames):
-              filter_parts.append(
-                  f"[{i}:v]scale=1080:1920:force_original_aspect_ratio=increase,"
-                  f"crop=1080:1920,zoompan=z='min(zoom+0.0008,1.2)':"
-                  f"d={frames}:s=1080x1920:fps={fps}[v{i}]"
-              )
-          concat_inputs = "".join(f"[v{i}]" for i in range(n_images))
-          filter_parts.append(f"{concat_inputs}concat=n={n_images}:v=1:a=0[vc]")
-          filter_parts.append(
-              "[vc]subtitles=captions.srt:original_size=1080x1920:"
-              "force_style='FontName=DejaVu Sans,FontSize=54,"
-              "PrimaryColour=&HFFFFFF&,OutlineColour=&H000000&,"
-              "BorderStyle=1,Outline=5,Bold=1,Alignment=2,MarginV=180'[vout]"
-          )
-          filter_complex = ";".join(filter_parts)
-
-          cmd = ["ffmpeg", "-y"]
-          for i in range(n_images):
-              cmd += ["-loop", "1", "-i", f"background{i+1}.jpg"]
-          cmd += ["-i", "voiceover.wav"]
-          cmd += [
-              "-filter_complex", filter_complex,
-              "-map", "[vout]", "-map", f"{n_images}:a",
-              "-c:v", "libx264", "-c:a", "aac",
-              "-shortest", "-pix_fmt", "yuv420p", "short.mp4"
-          ]
-
-          subprocess.run(cmd, check=True)
-          EOF
-
-      - name: Upload short
-        uses: actions/upload-artifact@v4
-        with:
-          name: short
-          path: short.mp4
