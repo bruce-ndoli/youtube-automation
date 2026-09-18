@@ -4,7 +4,830 @@ on:
   workflow_dispatch:
 
 jobs:
-  create-video:
+  create-video:Build the complete GitHub Actions workflow for my automated YouTube channel.
+
+DO NOT give me a tutorial.
+DO NOT give me step-by-step instructions.
+DO NOT ask me to manually build individual nodes or workflows.
+
+I want you to CREATE/WRITE THE ACTUAL WORKING GITHUB ACTIONS WORKFLOW FILE.
+
+==================================================
+CORE REQUIREMENT
+==================================================
+
+Create a completely cloud-based YouTube automation system.
+
+My personal computer must NOT be required to run.
+
+The workflow must run using GitHub Actions on GitHub-hosted runners.
+
+My PC can be completely OFF.
+
+Target cost: $0.
+
+I have no credit/debit card.
+
+Use free and open-source tools wherever possible.
+
+Do not add paid APIs or services.
+
+If a service that was originally planned is no longer genuinely free, replace it with another genuinely free solution rather than pretending it is free.
+
+==================================================
+UPLOAD SCHEDULE
+==================================================
+
+My local timezone is:
+
+Africa/Kigali
+
+Rwanda is UTC+2.
+
+Every video must be published at:
+
+10:00 AM Rwanda time
+
+GitHub Actions uses UTC.
+
+Therefore:
+
+10:00 AM Rwanda = 08:00 UTC.
+
+The workflow must have these schedules:
+
+Monday:
+Short at 08:00 UTC
+
+Tuesday:
+Short at 08:00 UTC
+
+Wednesday:
+Short at 08:00 UTC
+
+Thursday:
+Short at 08:00 UTC
+
+Friday:
+Short at 08:00 UTC
+
+Saturday:
+Short at 08:00 UTC
+
+Sunday:
+Full-length video at 08:00 UTC
+
+Use:
+
+Shorts:
+0 8 * * 1-6
+
+Full video:
+0 8 * * 0
+
+DO NOT use an every-6-hours schedule.
+
+The final system must produce:
+
+6 Shorts per week
++
+1 full-length video every Sunday
+
+==================================================
+CONTENT NICHE
+==================================================
+
+The YouTube channel is about:
+
+Artificial Intelligence
+AI technology
+AI robots
+Robotics
+Future technology
+AI breakthroughs
+AI companies
+AI products
+Real-world AI applications
+Interesting technology developments
+
+Each video should focus on one interesting current story.
+
+Prioritize stories that are:
+
+- recent
+- interesting
+- surprising
+- visually compelling
+- useful to viewers
+- supported by reliable information
+
+Avoid repeatedly covering the same story.
+
+==================================================
+NEWS RESEARCH
+==================================================
+
+For every video:
+
+1. Fetch recent AI/technology news.
+
+Use genuinely free sources.
+
+Google News RSS can be used.
+
+Example:
+
+https://news.google.com/rss/search?q=artificial%20intelligence%20AI%20robots%20technology&hl=en-US&gl=US&ceid=US:en
+
+Extract multiple articles.
+
+Give the AI the article titles, summaries and URLs.
+
+The AI must select ONE story.
+
+Only information supported by the collected research may be used.
+
+Never invent:
+
+- facts
+- statistics
+- quotes
+- companies
+- products
+- events
+- people
+- dates
+
+If the research does not support a claim, do not make that claim.
+
+==================================================
+AI MODEL
+==================================================
+
+Install Ollama automatically on the GitHub runner.
+
+Use a lightweight free model that can run on a standard GitHub-hosted runner.
+
+Prefer:
+
+tinyllama
+
+if it works reliably.
+
+If tinyllama cannot reliably produce the required structured output, use another lightweight freely available model that can run within the runner's resources.
+
+The workflow must automatically:
+
+- install Ollama
+- start Ollama
+- download the model
+- generate the content
+- continue to the next stage
+
+Do not require my PC to have Ollama installed.
+
+==================================================
+SHORTS CONTENT
+==================================================
+
+Monday through Saturday must create YouTube Shorts.
+
+Each Short must be:
+
+30–60 seconds.
+
+Format:
+
+1080x1920
+9:16
+
+The AI must generate:
+
+TITLE
+SCRIPT
+SCENE1
+SCENE2
+SCENE3
+SCENE4
+SCENE5
+DESCRIPTION
+TAGS
+
+The script must:
+
+- have a powerful hook
+- create curiosity
+- use simple English
+- use natural spoken language
+- be factually supported
+- contain no headings
+- contain no bullet points
+- contain no emojis
+- contain no stage directions
+- end naturally
+
+The five scenes must describe five different visuals that tell the SAME story.
+
+==================================================
+SUNDAY FULL-LENGTH VIDEO
+==================================================
+
+Sunday must create ONE full-length YouTube video.
+
+Format:
+
+1920x1080
+16:9
+
+The video must be substantially longer than a Short.
+
+The AI must create:
+
+TITLE
+DESCRIPTION
+SCRIPT
+SCENE1
+SCENE2
+SCENE3
+SCENE4
+SCENE5
+SCENE6
+SCENE7
+SCENE8
+SCENE9
+SCENE10
+and additional scenes if required by the script.
+
+The number of scenes should be determined by the narration length.
+
+The visuals must cover the entire narration.
+
+Do not simply stretch five images into a long video.
+
+==================================================
+AI IMAGE GENERATION
+==================================================
+
+Generate AI images automatically.
+
+For Shorts:
+
+5 images.
+
+For Sunday full videos:
+
+Generate enough images for the entire video.
+
+Shorts images:
+
+1080x1920
+
+Full videos:
+
+1920x1080
+
+Images should be:
+
+- cinematic
+- realistic/high quality
+- related to the story
+- visually different between scenes
+- consistent with the story
+- suitable for YouTube
+- without watermarks
+- without unnecessary text
+- without logos unless the story genuinely requires one
+
+Use a genuinely free image-generation method.
+
+Pollinations may be used ONLY if the endpoint being used is actually available without payment or mandatory paid credits.
+
+If Pollinations requires payment, credits, or authentication that I cannot obtain for free, do NOT use it.
+
+Instead use another genuinely free/open-source solution that can work in GitHub Actions.
+
+Do not silently introduce a paid API.
+
+If no reliable free image-generation option is available, clearly fail the image-generation step instead of creating fake/empty images.
+
+==================================================
+VOICEOVER
+==================================================
+
+Use Piper TTS.
+
+Install Piper automatically.
+
+Download a free English voice model automatically.
+
+Use:
+
+en_US-lessac-medium
+
+if available.
+
+Generate:
+
+voiceover.wav
+
+from the generated script.
+
+No manual recording.
+
+Verify that the resulting audio file exists and is not empty.
+
+==================================================
+CAPTIONS
+==================================================
+
+Automatically create captions synchronized with the voiceover.
+
+For Shorts:
+
+Use large, readable captions positioned appropriately for mobile viewing.
+
+For full videos:
+
+Use readable captions without blocking important visuals.
+
+Create:
+
+captions.srt
+
+Use FFmpeg to burn the captions into the final video.
+
+==================================================
+VIDEO EDITING
+==================================================
+
+Install FFmpeg automatically.
+
+SHORTS:
+
+Use the five AI images.
+
+Create five visual sections.
+
+Apply:
+
+- slow zoom
+- pan movement
+- transitions
+- smooth scene changes
+- voiceover
+- background music
+- captions
+
+Output:
+
+short.mp4
+
+Resolution:
+
+1080x1920
+
+FULL VIDEO:
+
+Use all generated images.
+
+Apply:
+
+- camera movement
+- zoom/pan
+- scene transitions
+- voiceover
+- background music
+- captions
+
+Output:
+
+full-video.mp4
+
+Resolution:
+
+1920x1080
+
+The videos must not contain:
+
+- black screens
+- empty scenes
+- missing images
+- broken audio
+- corrupted video
+
+==================================================
+BACKGROUND MUSIC
+==================================================
+
+Use genuinely free/openly licensed background music.
+
+Do not use copyrighted commercial music.
+
+Music volume must be much lower than narration.
+
+If a reliable free downloadable music source cannot be used automatically, create a simple royalty-free background audio track using FFmpeg rather than using copyrighted music.
+
+==================================================
+CONTENT QUALITY
+==================================================
+
+The generated content must not simply copy news articles.
+
+Transform researched information into original narration/storytelling.
+
+Each video should have:
+
+- unique story
+- original narration
+- unique scene prompts
+- meaningful viewer value
+- different visuals
+- different title
+
+Avoid mass-producing essentially identical videos.
+
+==================================================
+DUPLICATE PROTECTION
+==================================================
+
+Maintain a history file in the repository.
+
+For example:
+
+data/content_history.json
+
+Before creating a new video:
+
+- read the history
+- compare the selected story/title against previous videos
+- avoid recently used stories
+- add the new story/title after successful generation
+
+Do not upload duplicate videos.
+
+Commit/update the history only if the GitHub Actions permissions allow it.
+
+If committing history creates unnecessary complexity, store the history using GitHub Actions artifacts/cache or another free persistent mechanism.
+
+==================================================
+VIDEO VALIDATION
+==================================================
+
+Before YouTube upload, validate:
+
+1. Video exists.
+2. Video is not empty.
+3. FFmpeg can read it.
+4. Video has audio.
+5. Video duration is greater than zero.
+6. Resolution is correct.
+7. Script exists.
+8. Title exists.
+9. Required images exist.
+10. Captions exist.
+11. Voiceover exists.
+
+For Shorts:
+
+Require:
+
+1080x1920
+
+For Sunday:
+
+Require:
+
+1920x1080
+
+If validation fails:
+
+STOP.
+
+Do NOT upload the video.
+
+Print a useful error.
+
+==================================================
+YOUTUBE UPLOAD
+==================================================
+
+Use the official YouTube Data API.
+
+Authentication must use GitHub Secrets.
+
+Never put credentials directly inside the YAML file.
+
+Use secrets:
+
+YOUTUBE_CLIENT_ID
+YOUTUBE_CLIENT_SECRET
+YOUTUBE_REFRESH_TOKEN
+
+The workflow must authenticate automatically.
+
+Upload the generated video.
+
+Set:
+
+Title
+Description
+Tags
+Category
+Visibility
+
+Use an appropriate YouTube category for technology.
+
+The upload must be scheduled/published for:
+
+10:00 AM Rwanda time
+
+Since the workflow itself runs at 08:00 UTC, make sure the upload timing does not accidentally shift because of timezone handling.
+
+If immediate upload at the scheduled workflow time is used, verify that 08:00 UTC corresponds to 10:00 AM Rwanda.
+
+After uploading:
+
+Verify that YouTube returned a successful video ID.
+
+Print the YouTube video ID.
+
+If upload fails:
+
+Do not report success.
+
+==================================================
+YOUTUBE DESCRIPTION
+==================================================
+
+Generate an original description for every video.
+
+Include:
+
+- summary of the story
+- relevant context
+- appropriate hashtags
+
+Do not keyword-stuff.
+
+==================================================
+TAGS
+==================================================
+
+Generate relevant tags.
+
+Possible general tags:
+
+AI
+Artificial Intelligence
+Technology
+AI News
+Technology News
+Robotics
+AI Robots
+Future Technology
+Tech News
+
+Add topic-specific tags.
+
+==================================================
+AI DISCLOSURE
+==================================================
+
+If the generated video contains realistic synthetic/altered content that requires disclosure under YouTube's policies, configure the upload appropriately.
+
+Do not misrepresent AI-generated material as authentic footage.
+
+==================================================
+GITHUB ACTIONS
+==================================================
+
+Create a production-ready workflow:
+
+.github/workflows/youtube-automation.yml
+
+Use:
+
+runs-on: ubuntu-latest
+
+The workflow must install all dependencies automatically.
+
+It must not depend on my personal computer.
+
+It must work when:
+
+- PC is OFF
+- browser is closed
+- I am offline
+- I am sleeping
+
+The GitHub runner should:
+
+1. Start.
+2. Install tools.
+3. Research news.
+4. Generate AI content.
+5. Generate images.
+6. Generate voice.
+7. Generate captions.
+8. Generate music.
+9. Edit video.
+10. Validate video.
+11. Upload to YouTube.
+12. Save artifacts.
+13. Finish.
+14. Shut down.
+
+==================================================
+FAILURE HANDLING
+==================================================
+
+Add retries for network operations.
+
+Image generation:
+3 attempts per image.
+
+News fetching:
+3 attempts.
+
+AI model startup:
+retry/check until available.
+
+TTS:
+verify output.
+
+FFmpeg:
+fail immediately if a command fails.
+
+YouTube:
+verify successful response.
+
+Never continue silently after a critical failure.
+
+==================================================
+ARTIFACTS
+==================================================
+
+Upload useful artifacts after each run.
+
+For Shorts:
+
+short.mp4
+script.txt
+title.txt
+description.txt
+voiceover.wav
+captions.srt
+image1.jpg
+image2.jpg
+image3.jpg
+image4.jpg
+image5.jpg
+story.txt
+
+For full videos:
+
+full-video.mp4
+script.txt
+title.txt
+description.txt
+voiceover.wav
+captions.srt
+all generated images
+story.txt
+
+==================================================
+MANUAL TESTING
+==================================================
+
+The workflow must support:
+
+workflow_dispatch
+
+so I can manually test it.
+
+Also configure the automatic schedules:
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * 1-6"
+    - cron: "0 8 * * 0"
+
+==================================================
+IMPORTANT SCHEDULE LOGIC
+==================================================
+
+The workflow must detect the day.
+
+If day is:
+
+Monday
+Tuesday
+Wednesday
+Thursday
+Friday
+Saturday
+
+run:
+
+SHORT PIPELINE
+
+If day is:
+
+Sunday
+
+run:
+
+FULL VIDEO PIPELINE
+
+Do not accidentally create a Short on Sunday.
+
+Do not accidentally create a full-length video Monday-Saturday.
+
+==================================================
+RESOURCE MANAGEMENT
+==================================================
+
+GitHub-hosted runners are temporary.
+
+Optimize the workflow so it does not unnecessarily consume CPU or storage.
+
+Use lightweight AI models.
+
+Clean up unnecessary temporary files before the job ends.
+
+Do not run a permanent server.
+
+==================================================
+FINAL OUTPUT
+==================================================
+
+Create the actual GitHub Actions YAML file.
+
+Do not merely describe it.
+
+The final workflow must implement:
+
+MONDAY
+Short → 10:00 AM Rwanda
+
+TUESDAY
+Short → 10:00 AM Rwanda
+
+WEDNESDAY
+Short → 10:00 AM Rwanda
+
+THURSDAY
+Short → 10:00 AM Rwanda
+
+FRIDAY
+Short → 10:00 AM Rwanda
+
+SATURDAY
+Short → 10:00 AM Rwanda
+
+SUNDAY
+Full-length video → 10:00 AM Rwanda
+
+Total:
+
+7 videos/week
+6 Shorts/week
+1 full-length video/week
+
+PC requirement:
+
+NONE after setup.
+
+Target cost:
+
+$0.
+
+The system should automatically:
+
+Research
+→ Select story
+→ Write script
+→ Create scene prompts
+→ Generate visuals
+→ Generate voice
+→ Generate captions
+→ Generate music
+→ Edit
+→ Validate
+→ Upload to YouTube
+→ Verify upload
+→ Save artifacts.
+
+IMPORTANT:
+
+Before using any external API/service, verify whether it is genuinely usable for this $0/no-card setup.
+
+Do not claim a service is free if it requires payment or paid credits.
+
+Build the workflow so that it is robust and production-ready rather than a simple demonstration.
+
+Return the complete workflow implementation.
     runs-on: ubuntu-latest
 
     steps:
