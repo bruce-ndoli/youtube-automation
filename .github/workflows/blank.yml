@@ -1,883 +1,1131 @@
-name: YouTube Automation
+name: AI YouTube Automation
 
 on:
   workflow_dispatch:
 
-jobs:
-  create-video:Build the complete GitHub Actions workflow for my automated YouTube channel.
-
-DO NOT give me a tutorial.
-DO NOT give me step-by-step instructions.
-DO NOT ask me to manually build individual nodes or workflows.
-
-I want you to CREATE/WRITE THE ACTUAL WORKING GITHUB ACTIONS WORKFLOW FILE.
-
-==================================================
-CORE REQUIREMENT
-==================================================
-
-Create a completely cloud-based YouTube automation system.
-
-My personal computer must NOT be required to run.
-
-The workflow must run using GitHub Actions on GitHub-hosted runners.
-
-My PC can be completely OFF.
-
-Target cost: $0.
-
-I have no credit/debit card.
-
-Use free and open-source tools wherever possible.
-
-Do not add paid APIs or services.
-
-If a service that was originally planned is no longer genuinely free, replace it with another genuinely free solution rather than pretending it is free.
-
-==================================================
-UPLOAD SCHEDULE
-==================================================
-
-My local timezone is:
-
-Africa/Kigali
-
-Rwanda is UTC+2.
-
-Every video must be published at:
-
-10:00 AM Rwanda time
-
-GitHub Actions uses UTC.
-
-Therefore:
-
-10:00 AM Rwanda = 08:00 UTC.
-
-The workflow must have these schedules:
-
-Monday:
-Short at 08:00 UTC
-
-Tuesday:
-Short at 08:00 UTC
-
-Wednesday:
-Short at 08:00 UTC
-
-Thursday:
-Short at 08:00 UTC
-
-Friday:
-Short at 08:00 UTC
-
-Saturday:
-Short at 08:00 UTC
-
-Sunday:
-Full-length video at 08:00 UTC
-
-Use:
-
-Shorts:
-0 8 * * 1-6
-
-Full video:
-0 8 * * 0
-
-DO NOT use an every-6-hours schedule.
-
-The final system must produce:
-
-6 Shorts per week
-+
-1 full-length video every Sunday
-
-==================================================
-CONTENT NICHE
-==================================================
-
-The YouTube channel is about:
-
-Artificial Intelligence
-AI technology
-AI robots
-Robotics
-Future technology
-AI breakthroughs
-AI companies
-AI products
-Real-world AI applications
-Interesting technology developments
-
-Each video should focus on one interesting current story.
-
-Prioritize stories that are:
-
-- recent
-- interesting
-- surprising
-- visually compelling
-- useful to viewers
-- supported by reliable information
-
-Avoid repeatedly covering the same story.
-
-==================================================
-NEWS RESEARCH
-==================================================
-
-For every video:
-
-1. Fetch recent AI/technology news.
-
-Use genuinely free sources.
-
-Google News RSS can be used.
-
-Example:
-
-https://news.google.com/rss/search?q=artificial%20intelligence%20AI%20robots%20technology&hl=en-US&gl=US&ceid=US:en
-
-Extract multiple articles.
-
-Give the AI the article titles, summaries and URLs.
-
-The AI must select ONE story.
-
-Only information supported by the collected research may be used.
-
-Never invent:
-
-- facts
-- statistics
-- quotes
-- companies
-- products
-- events
-- people
-- dates
-
-If the research does not support a claim, do not make that claim.
-
-==================================================
-AI MODEL
-==================================================
-
-Install Ollama automatically on the GitHub runner.
-
-Use a lightweight free model that can run on a standard GitHub-hosted runner.
-
-Prefer:
-
-tinyllama
-
-if it works reliably.
-
-If tinyllama cannot reliably produce the required structured output, use another lightweight freely available model that can run within the runner's resources.
-
-The workflow must automatically:
-
-- install Ollama
-- start Ollama
-- download the model
-- generate the content
-- continue to the next stage
-
-Do not require my PC to have Ollama installed.
-
-==================================================
-SHORTS CONTENT
-==================================================
-
-Monday through Saturday must create YouTube Shorts.
-
-Each Short must be:
-
-30–60 seconds.
-
-Format:
-
-1080x1920
-9:16
-
-The AI must generate:
-
-TITLE
-SCRIPT
-SCENE1
-SCENE2
-SCENE3
-SCENE4
-SCENE5
-DESCRIPTION
-TAGS
-
-The script must:
-
-- have a powerful hook
-- create curiosity
-- use simple English
-- use natural spoken language
-- be factually supported
-- contain no headings
-- contain no bullet points
-- contain no emojis
-- contain no stage directions
-- end naturally
-
-The five scenes must describe five different visuals that tell the SAME story.
-
-==================================================
-SUNDAY FULL-LENGTH VIDEO
-==================================================
-
-Sunday must create ONE full-length YouTube video.
-
-Format:
-
-1920x1080
-16:9
-
-The video must be substantially longer than a Short.
-
-The AI must create:
-
-TITLE
-DESCRIPTION
-SCRIPT
-SCENE1
-SCENE2
-SCENE3
-SCENE4
-SCENE5
-SCENE6
-SCENE7
-SCENE8
-SCENE9
-SCENE10
-and additional scenes if required by the script.
-
-The number of scenes should be determined by the narration length.
-
-The visuals must cover the entire narration.
-
-Do not simply stretch five images into a long video.
-
-==================================================
-AI IMAGE GENERATION
-==================================================
-
-Generate AI images automatically.
-
-For Shorts:
-
-5 images.
-
-For Sunday full videos:
-
-Generate enough images for the entire video.
-
-Shorts images:
-
-1080x1920
-
-Full videos:
-
-1920x1080
-
-Images should be:
-
-- cinematic
-- realistic/high quality
-- related to the story
-- visually different between scenes
-- consistent with the story
-- suitable for YouTube
-- without watermarks
-- without unnecessary text
-- without logos unless the story genuinely requires one
-
-Use a genuinely free image-generation method.
-
-Pollinations may be used ONLY if the endpoint being used is actually available without payment or mandatory paid credits.
-
-If Pollinations requires payment, credits, or authentication that I cannot obtain for free, do NOT use it.
-
-Instead use another genuinely free/open-source solution that can work in GitHub Actions.
-
-Do not silently introduce a paid API.
-
-If no reliable free image-generation option is available, clearly fail the image-generation step instead of creating fake/empty images.
-
-==================================================
-VOICEOVER
-==================================================
-
-Use Piper TTS.
-
-Install Piper automatically.
-
-Download a free English voice model automatically.
-
-Use:
-
-en_US-lessac-medium
-
-if available.
-
-Generate:
-
-voiceover.wav
-
-from the generated script.
-
-No manual recording.
-
-Verify that the resulting audio file exists and is not empty.
-
-==================================================
-CAPTIONS
-==================================================
-
-Automatically create captions synchronized with the voiceover.
-
-For Shorts:
-
-Use large, readable captions positioned appropriately for mobile viewing.
-
-For full videos:
-
-Use readable captions without blocking important visuals.
-
-Create:
-
-captions.srt
-
-Use FFmpeg to burn the captions into the final video.
-
-==================================================
-VIDEO EDITING
-==================================================
-
-Install FFmpeg automatically.
-
-SHORTS:
-
-Use the five AI images.
-
-Create five visual sections.
-
-Apply:
-
-- slow zoom
-- pan movement
-- transitions
-- smooth scene changes
-- voiceover
-- background music
-- captions
-
-Output:
-
-short.mp4
-
-Resolution:
-
-1080x1920
-
-FULL VIDEO:
-
-Use all generated images.
-
-Apply:
-
-- camera movement
-- zoom/pan
-- scene transitions
-- voiceover
-- background music
-- captions
-
-Output:
-
-full-video.mp4
-
-Resolution:
-
-1920x1080
-
-The videos must not contain:
-
-- black screens
-- empty scenes
-- missing images
-- broken audio
-- corrupted video
-
-==================================================
-BACKGROUND MUSIC
-==================================================
-
-Use genuinely free/openly licensed background music.
-
-Do not use copyrighted commercial music.
-
-Music volume must be much lower than narration.
-
-If a reliable free downloadable music source cannot be used automatically, create a simple royalty-free background audio track using FFmpeg rather than using copyrighted music.
-
-==================================================
-CONTENT QUALITY
-==================================================
-
-The generated content must not simply copy news articles.
-
-Transform researched information into original narration/storytelling.
-
-Each video should have:
-
-- unique story
-- original narration
-- unique scene prompts
-- meaningful viewer value
-- different visuals
-- different title
-
-Avoid mass-producing essentially identical videos.
-
-==================================================
-DUPLICATE PROTECTION
-==================================================
-
-Maintain a history file in the repository.
-
-For example:
-
-data/content_history.json
-
-Before creating a new video:
-
-- read the history
-- compare the selected story/title against previous videos
-- avoid recently used stories
-- add the new story/title after successful generation
-
-Do not upload duplicate videos.
-
-Commit/update the history only if the GitHub Actions permissions allow it.
-
-If committing history creates unnecessary complexity, store the history using GitHub Actions artifacts/cache or another free persistent mechanism.
-
-==================================================
-VIDEO VALIDATION
-==================================================
-
-Before YouTube upload, validate:
-
-1. Video exists.
-2. Video is not empty.
-3. FFmpeg can read it.
-4. Video has audio.
-5. Video duration is greater than zero.
-6. Resolution is correct.
-7. Script exists.
-8. Title exists.
-9. Required images exist.
-10. Captions exist.
-11. Voiceover exists.
-
-For Shorts:
-
-Require:
-
-1080x1920
-
-For Sunday:
-
-Require:
-
-1920x1080
-
-If validation fails:
-
-STOP.
-
-Do NOT upload the video.
-
-Print a useful error.
-
-==================================================
-YOUTUBE UPLOAD
-==================================================
-
-Use the official YouTube Data API.
-
-Authentication must use GitHub Secrets.
-
-Never put credentials directly inside the YAML file.
-
-Use secrets:
-
-YOUTUBE_CLIENT_ID
-YOUTUBE_CLIENT_SECRET
-YOUTUBE_REFRESH_TOKEN
-
-The workflow must authenticate automatically.
-
-Upload the generated video.
-
-Set:
-
-Title
-Description
-Tags
-Category
-Visibility
-
-Use an appropriate YouTube category for technology.
-
-The upload must be scheduled/published for:
-
-10:00 AM Rwanda time
-
-Since the workflow itself runs at 08:00 UTC, make sure the upload timing does not accidentally shift because of timezone handling.
-
-If immediate upload at the scheduled workflow time is used, verify that 08:00 UTC corresponds to 10:00 AM Rwanda.
-
-After uploading:
-
-Verify that YouTube returned a successful video ID.
-
-Print the YouTube video ID.
-
-If upload fails:
-
-Do not report success.
-
-==================================================
-YOUTUBE DESCRIPTION
-==================================================
-
-Generate an original description for every video.
-
-Include:
-
-- summary of the story
-- relevant context
-- appropriate hashtags
-
-Do not keyword-stuff.
-
-==================================================
-TAGS
-==================================================
-
-Generate relevant tags.
-
-Possible general tags:
-
-AI
-Artificial Intelligence
-Technology
-AI News
-Technology News
-Robotics
-AI Robots
-Future Technology
-Tech News
-
-Add topic-specific tags.
-
-==================================================
-AI DISCLOSURE
-==================================================
-
-If the generated video contains realistic synthetic/altered content that requires disclosure under YouTube's policies, configure the upload appropriately.
-
-Do not misrepresent AI-generated material as authentic footage.
-
-==================================================
-GITHUB ACTIONS
-==================================================
-
-Create a production-ready workflow:
-
-.github/workflows/youtube-automation.yml
-
-Use:
-
-runs-on: ubuntu-latest
-
-The workflow must install all dependencies automatically.
-
-It must not depend on my personal computer.
-
-It must work when:
-
-- PC is OFF
-- browser is closed
-- I am offline
-- I am sleeping
-
-The GitHub runner should:
-
-1. Start.
-2. Install tools.
-3. Research news.
-4. Generate AI content.
-5. Generate images.
-6. Generate voice.
-7. Generate captions.
-8. Generate music.
-9. Edit video.
-10. Validate video.
-11. Upload to YouTube.
-12. Save artifacts.
-13. Finish.
-14. Shut down.
-
-==================================================
-FAILURE HANDLING
-==================================================
-
-Add retries for network operations.
-
-Image generation:
-3 attempts per image.
-
-News fetching:
-3 attempts.
-
-AI model startup:
-retry/check until available.
-
-TTS:
-verify output.
-
-FFmpeg:
-fail immediately if a command fails.
-
-YouTube:
-verify successful response.
-
-Never continue silently after a critical failure.
-
-==================================================
-ARTIFACTS
-==================================================
-
-Upload useful artifacts after each run.
-
-For Shorts:
-
-short.mp4
-script.txt
-title.txt
-description.txt
-voiceover.wav
-captions.srt
-image1.jpg
-image2.jpg
-image3.jpg
-image4.jpg
-image5.jpg
-story.txt
-
-For full videos:
-
-full-video.mp4
-script.txt
-title.txt
-description.txt
-voiceover.wav
-captions.srt
-all generated images
-story.txt
-
-==================================================
-MANUAL TESTING
-==================================================
-
-The workflow must support:
-
-workflow_dispatch
-
-so I can manually test it.
-
-Also configure the automatic schedules:
-
-on:
-  workflow_dispatch:
+  # Monday-Saturday: Shorts at 08:00 UTC = 10:00 AM Rwanda
+  # Sunday: Full video at 08:00 UTC = 10:00 AM Rwanda
   schedule:
     - cron: "0 8 * * 1-6"
     - cron: "0 8 * * 0"
 
-==================================================
-IMPORTANT SCHEDULE LOGIC
-==================================================
+permissions:
+  contents: write
 
-The workflow must detect the day.
+jobs:
+  youtube-automation:
 
-If day is:
-
-Monday
-Tuesday
-Wednesday
-Thursday
-Friday
-Saturday
-
-run:
-
-SHORT PIPELINE
-
-If day is:
-
-Sunday
-
-run:
-
-FULL VIDEO PIPELINE
-
-Do not accidentally create a Short on Sunday.
-
-Do not accidentally create a full-length video Monday-Saturday.
-
-==================================================
-RESOURCE MANAGEMENT
-==================================================
-
-GitHub-hosted runners are temporary.
-
-Optimize the workflow so it does not unnecessarily consume CPU or storage.
-
-Use lightweight AI models.
-
-Clean up unnecessary temporary files before the job ends.
-
-Do not run a permanent server.
-
-==================================================
-FINAL OUTPUT
-==================================================
-
-Create the actual GitHub Actions YAML file.
-
-Do not merely describe it.
-
-The final workflow must implement:
-
-MONDAY
-Short → 10:00 AM Rwanda
-
-TUESDAY
-Short → 10:00 AM Rwanda
-
-WEDNESDAY
-Short → 10:00 AM Rwanda
-
-THURSDAY
-Short → 10:00 AM Rwanda
-
-FRIDAY
-Short → 10:00 AM Rwanda
-
-SATURDAY
-Short → 10:00 AM Rwanda
-
-SUNDAY
-Full-length video → 10:00 AM Rwanda
-
-Total:
-
-7 videos/week
-6 Shorts/week
-1 full-length video/week
-
-PC requirement:
-
-NONE after setup.
-
-Target cost:
-
-$0.
-
-The system should automatically:
-
-Research
-→ Select story
-→ Write script
-→ Create scene prompts
-→ Generate visuals
-→ Generate voice
-→ Generate captions
-→ Generate music
-→ Edit
-→ Validate
-→ Upload to YouTube
-→ Verify upload
-→ Save artifacts.
-
-IMPORTANT:
-
-Before using any external API/service, verify whether it is genuinely usable for this $0/no-card setup.
-
-Do not claim a service is free if it requires payment or paid credits.
-
-Build the workflow so that it is robust and production-ready rather than a simple demonstration.
-
-Return the complete workflow implementation.
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install Piper
+
+      # ==========================================================
+      # 1. CHECKOUT REPOSITORY
+      # ==========================================================
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+
+      # ==========================================================
+      # 2. DETERMINE VIDEO TYPE
+      # ==========================================================
+
+      - name: Determine video type
+        id: video_type
         run: |
-          python3 -m pip install piper-tts
+
+          DAY=$(date -u +%u)
+
+          echo "UTC day number: $DAY"
+
+          if [ "$DAY" -eq 7 ]; then
+            echo "type=full" >> "$GITHUB_OUTPUT"
+            echo "FULL VIDEO DAY"
+          else
+            echo "type=short" >> "$GITHUB_OUTPUT"
+            echo "SHORT VIDEO DAY"
+          fi
+
+
+      # ==========================================================
+      # 3. INSTALL SYSTEM TOOLS
+      # ==========================================================
+
+      - name: Install system tools
+        run: |
+
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            ffmpeg \
+            python3 \
+            python3-pip \
+            curl \
+            jq \
+            git
+
+
+      # ==========================================================
+      # 4. INSTALL PYTHON PACKAGES
+      # ==========================================================
+
+      - name: Install Python packages
+        run: |
+
+          python3 -m pip install \
+            --break-system-packages \
+            piper-tts \
+            feedparser \
+            requests
+
+
+      # ==========================================================
+      # 5. DOWNLOAD PIPER VOICE
+      # ==========================================================
 
       - name: Download Piper voice
         run: |
+
           mkdir -p models
-          curl -L "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx?download=true" -o models/en_US-lessac-medium.onnx
-          curl -L "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json?download=true" -o models/en_US-lessac-medium.onnx.json
 
-      - name: Create script
-        run: |
-          echo "This is our first automated YouTube Short. The entire video is being created in the cloud, without your computer running." > script.txt
+          curl -L \
+            "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx?download=true" \
+            -o models/en_US-lessac-medium.onnx
 
-      - name: Generate voice
+          curl -L \
+            "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json?download=true" \
+            -o models/en_US-lessac-medium.onnx.json
+
+          test -s models/en_US-lessac-medium.onnx
+          test -s models/en_US-lessac-medium.onnx.json
+
+          echo "Piper voice downloaded."
+
+
+      # ==========================================================
+      # 6. INSTALL OLLAMA
+      # ==========================================================
+
+      - name: Install Ollama
         run: |
+
+          curl -fsSL https://ollama.com/install.sh | sh
+
+
+      # ==========================================================
+      # 7. START OLLAMA
+      # ==========================================================
+
+      - name: Start Ollama
+        run: |
+
+          ollama serve > ollama.log 2>&1 &
+
+          for i in {1..30}; do
+
+            if curl -s http://127.0.0.1:11434/api/tags > /dev/null; then
+              echo "Ollama is ready."
+              break
+            fi
+
+            echo "Waiting for Ollama..."
+            sleep 2
+
+          done
+
+          curl -s http://127.0.0.1:11434/api/tags
+
+
+      # ==========================================================
+      # 8. DOWNLOAD AI MODEL
+      # ==========================================================
+
+      - name: Download AI model
+        run: |
+
+          ollama pull tinyllama
+
+
+      # ==========================================================
+      # 9. GET AI NEWS
+      # ==========================================================
+
+      - name: Get latest AI news
+        run: |
+
+          curl --retry 3 --retry-delay 5 -L \
+            "https://news.google.com/rss/search?q=artificial%20intelligence%20AI%20robots%20technology&hl=en-US&gl=US&ceid=US:en" \
+            -o news.xml
+
+          test -s news.xml
+
+          echo "News downloaded."
+
+          head -40 news.xml
+
+
+      # ==========================================================
+      # 10. EXTRACT ARTICLES
+      # ==========================================================
+
+      - name: Extract news articles
+        run: |
+
+          python3 <<'PY'
+
+          import feedparser
+
+          feed = feedparser.parse("news.xml")
+
+          if not feed.entries:
+              raise RuntimeError("No news articles found.")
+
+          with open("articles.txt", "w", encoding="utf-8") as f:
+
+              for i, entry in enumerate(feed.entries[:15], 1):
+
+                  title = entry.get("title", "")
+                  summary = entry.get("summary", "")
+                  link = entry.get("link", "")
+
+                  f.write(
+                      f"ARTICLE {i}\n"
+                      f"TITLE: {title}\n"
+                      f"SUMMARY: {summary}\n"
+                      f"URL: {link}\n\n"
+                  )
+
+          print("Articles extracted.")
+
+          PY
+
+          cat articles.txt
+
+
+      # ==========================================================
+      # 11. GENERATE CONTENT PACKAGE
+      # ==========================================================
+
+      - name: Generate AI content
+        run: |
+
+          NEWS=$(cat articles.txt)
+
+          if [ "${{ steps.video_type.outputs.type }}" = "short" ]; then
+
+            cat > prompt.txt <<EOF
+
+You are an expert YouTube Shorts producer.
+
+Use ONLY facts supported by the news articles below.
+
+Choose ONE interesting recent AI or technology story.
+
+Create a 30-60 second YouTube Shorts video.
+
+Return EXACTLY this format:
+
+TITLE:
+one accurate short title
+
+DESCRIPTION:
+a short YouTube description
+
+SCRIPT:
+30-60 second narration
+
+SCENE1:
+detailed visual prompt for the first part
+
+SCENE2:
+detailed visual prompt for the second part
+
+SCENE3:
+detailed visual prompt for the third part
+
+SCENE4:
+detailed visual prompt for the fourth part
+
+SCENE5:
+detailed visual prompt for the ending
+
+TAGS:
+comma separated relevant tags
+
+RULES:
+
+Start with a powerful hook.
+
+Use simple natural English.
+
+Use short sentences.
+
+Do not invent facts.
+
+Do not invent statistics.
+
+Do not invent quotes.
+
+Do not invent events.
+
+Do not use emojis.
+
+Do not use bullet points inside SCRIPT.
+
+Do not use headings inside SCRIPT.
+
+The narration must be original storytelling based on the research.
+
+All five scenes must describe the SAME story.
+
+Make each scene visually different.
+
+Visual prompts must contain:
+cinematic realistic AI technology journalism,
+no text,
+no watermark,
+no logo.
+
+NEWS ARTICLES:
+
+$NEWS
+
+EOF
+
+          else
+
+            cat > prompt.txt <<EOF
+
+You are an expert YouTube technology documentary producer.
+
+Use ONLY facts supported by the news articles below.
+
+Choose ONE interesting recent AI or technology story.
+
+Create a substantial long-form YouTube video.
+
+Target narration length:
+approximately 8-12 minutes.
+
+Return EXACTLY this format:
+
+TITLE:
+accurate clickable title
+
+DESCRIPTION:
+YouTube description
+
+SCRIPT:
+long-form narration
+
+SCENE1:
+detailed visual prompt
+
+SCENE2:
+detailed visual prompt
+
+SCENE3:
+detailed visual prompt
+
+SCENE4:
+detailed visual prompt
+
+SCENE5:
+detailed visual prompt
+
+SCENE6:
+detailed visual prompt
+
+SCENE7:
+detailed visual prompt
+
+SCENE8:
+detailed visual prompt
+
+SCENE9:
+detailed visual prompt
+
+SCENE10:
+detailed visual prompt
+
+SCENE11:
+detailed visual prompt
+
+SCENE12:
+detailed visual prompt
+
+TAGS:
+comma separated relevant tags
+
+RULES:
+
+Start with a strong hook.
+
+Use simple natural English.
+
+Explain the story clearly.
+
+Maintain viewer curiosity.
+
+Use only facts supported by the research.
+
+Do not invent facts.
+
+Do not invent statistics.
+
+Do not invent quotes.
+
+Do not invent events.
+
+Do not use emojis.
+
+Do not use bullet points inside SCRIPT.
+
+Do not put headings inside SCRIPT.
+
+The narration must be original storytelling and commentary.
+
+Each scene must visually support the narration.
+
+Make scenes visually different.
+
+Visual prompts must contain:
+cinematic realistic AI technology documentary,
+no unnecessary text,
+no watermark.
+
+NEWS ARTICLES:
+
+$NEWS
+
+EOF
+
+          fi
+
+          ollama run tinyllama "$(cat prompt.txt)" > story.txt
+
+          test -s story.txt
+
+          echo "=============================="
+          echo "GENERATED STORY"
+          echo "=============================="
+
+          cat story.txt
+
+
+      # ==========================================================
+      # 12. PARSE AI OUTPUT
+      # ==========================================================
+
+      - name: Parse AI content
+        run: |
+
+          python3 <<'PY'
+
+          import re
+
+          text = open(
+              "story.txt",
+              encoding="utf-8"
+          ).read()
+
+          def extract(start, end=None):
+
+              if end:
+
+                  pattern = (
+                      rf"^\s*{start}:\s*(.*?)"
+                      rf"(?=^\s*{end}:)"
+                  )
+
+              else:
+
+                  pattern = (
+                      rf"^\s*{start}:\s*(.*)"
+                  )
+
+              match = re.search(
+                  pattern,
+                  text,
+                  re.I | re.S | re.M
+              )
+
+              if not match:
+                  return ""
+
+              return match.group(1).strip()
+
+
+          title = extract("TITLE", "DESCRIPTION")
+          description = extract("DESCRIPTION", "SCRIPT")
+          
+          if "${{ steps.video_type.outputs.type }}" == "short":
+
+              script = extract("SCRIPT", "SCENE1")
+
+              scenes = [
+                  extract("SCENE1", "SCENE2"),
+                  extract("SCENE2", "SCENE3"),
+                  extract("SCENE3", "SCENE4"),
+                  extract("SCENE4", "SCENE5"),
+                  extract("SCENE5", "TAGS")
+              ]
+
+          else:
+
+              script = extract("SCRIPT", "SCENE1")
+
+              scenes = [
+                  extract("SCENE1", "SCENE2"),
+                  extract("SCENE2", "SCENE3"),
+                  extract("SCENE3", "SCENE4"),
+                  extract("SCENE4", "SCENE5"),
+                  extract("SCENE5", "SCENE6"),
+                  extract("SCENE6", "SCENE7"),
+                  extract("SCENE7", "SCENE8"),
+                  extract("SCENE8", "SCENE9"),
+                  extract("SCENE9", "SCENE10"),
+                  extract("SCENE10", "SCENE11"),
+                  extract("SCENE11", "SCENE12"),
+                  extract("SCENE12", "TAGS")
+              ]
+
+          tags = extract("TAGS")
+
+          if not title:
+              raise RuntimeError("AI failed to create title.")
+
+          if not script:
+              raise RuntimeError("AI failed to create script.")
+
+          if len(script) < 100:
+              raise RuntimeError("Generated script is too short.")
+
+          open(
+              "title.txt",
+              "w",
+              encoding="utf-8"
+          ).write(title)
+
+          open(
+              "description.txt",
+              "w",
+              encoding="utf-8"
+          ).write(description)
+
+          open(
+              "script.txt",
+              "w",
+              encoding="utf-8"
+          ).write(script)
+
+          open(
+              "tags.txt",
+              "w",
+              encoding="utf-8"
+          ).write(tags)
+
+          for i, scene in enumerate(scenes, 1):
+
+              if scene.strip():
+
+                  open(
+                      f"scene{i}.txt",
+                      "w",
+                      encoding="utf-8"
+                  ).write(scene)
+
+          print("Title:")
+          print(title)
+
+          print("\nScript:")
+          print(script)
+
+          print("\nScenes:")
+
+          for i, scene in enumerate(scenes, 1):
+
+              print(f"SCENE {i}:")
+              print(scene)
+
+          PY
+
+
+      # ==========================================================
+      # 13. GENERATE AI IMAGES
+      # ==========================================================
+
+      - name: Generate AI images
+        run: |
+
+          python3 <<'PY'
+
+          import requests
+          import urllib.parse
+          import time
+          import os
+
+          video_type = "${{ steps.video_type.outputs.type }}"
+
+          if video_type == "short":
+              total_scenes = 5
+              width = 1080
+              height = 1920
+          else:
+              total_scenes = 12
+              width = 1920
+              height = 1080
+
+          for i in range(1, total_scenes + 1):
+
+              filename = f"scene{i}.txt"
+
+              if not os.path.exists(filename):
+                  raise RuntimeError(
+                      f"Missing scene {i}"
+                  )
+
+              prompt = open(
+                  filename,
+                  encoding="utf-8"
+              ).read().strip()
+
+              if not prompt:
+                  raise RuntimeError(
+                      f"Empty scene {i}"
+                  )
+
+              full_prompt = (
+                  "High quality cinematic technology documentary. "
+                  "Realistic photography. "
+                  "Professional lighting. "
+                  "Detailed environment. "
+                  "Visually interesting. "
+                  "No watermark. "
+                  "No unnecessary text. "
+                  + prompt
+              )
+
+              encoded = urllib.parse.quote(
+                  full_prompt
+              )
+
+              url = (
+                  "https://image.pollinations.ai/prompt/"
+                  + encoded
+                  + f"?width={width}&height={height}&nologo=true"
+              )
+
+              print(
+                  f"Generating image {i}/{total_scenes}"
+              )
+
+              success = False
+
+              for attempt in range(1, 4):
+
+                  try:
+
+                      response = requests.get(
+                          url,
+                          timeout=120
+                      )
+
+                      print(
+                          "HTTP:",
+                          response.status_code,
+                          "SIZE:",
+                          len(response.content)
+                      )
+
+                      if (
+                          response.status_code == 200
+                          and len(response.content) > 10000
+                      ):
+
+                          with open(
+                              f"image{i}.jpg",
+                              "wb"
+                          ) as f:
+
+                              f.write(
+                                  response.content
+                              )
+
+                          success = True
+                          break
+
+                  except Exception as e:
+
+                      print(
+                          "ERROR:",
+                          e
+                      )
+
+                  time.sleep(5)
+
+              if not success:
+
+                  raise RuntimeError(
+                      f"Image generation failed for scene {i}"
+                  )
+
+          print(
+              "All images generated successfully."
+          )
+
+          PY
+
+
+      # ==========================================================
+      # 14. GENERATE VOICEOVER
+      # ==========================================================
+
+      - name: Generate voiceover
+        run: |
+
           python3 -m piper \
             -m models/en_US-lessac-medium.onnx \
             -i script.txt \
             -f voiceover.wav
 
-      - name: Install FFmpeg
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          test -s voiceover.wav
 
-      - name: Create vertical background
+          echo "Voiceover generated."
+
+
+      # ==========================================================
+      # 15. CREATE CAPTIONS
+      # ==========================================================
+
+      - name: Create captions
         run: |
+
+          python3 <<'PY'
+
+          import wave
+
+          script = open(
+              "script.txt",
+              encoding="utf-8"
+          ).read().strip()
+
+          words = script.split()
+
+          if not words:
+              raise RuntimeError(
+                  "Script is empty."
+              )
+
+          with wave.open(
+              "voiceover.wav",
+              "rb"
+          ) as audio:
+
+              duration = (
+                  audio.getnframes()
+                  /
+                  audio.getframerate()
+              )
+
+          time_per_word = (
+              duration / len(words)
+          )
+
+          def timestamp(seconds):
+
+              h = int(seconds // 3600)
+
+              m = int(
+                  (seconds % 3600) // 60
+              )
+
+              s = int(seconds % 60)
+
+              ms = int(
+                  (seconds - int(seconds))
+                  * 1000
+              )
+
+              return (
+                  f"{h:02}:{m:02}:"
+                  f"{s:02},{ms:03}"
+              )
+
+          with open(
+              "captions.srt",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              chunk_size = 5
+
+              for i in range(
+                  0,
+                  len(words),
+                  chunk_size
+              ):
+
+                  chunk = words[
+                      i:i + chunk_size
+                  ]
+
+                  start = (
+                      i * time_per_word
+                  )
+
+                  end = min(
+                      (
+                          i + len(chunk)
+                      ) * time_per_word,
+                      duration
+                  )
+
+                  number = (
+                      i // chunk_size
+                  ) + 1
+
+                  f.write(
+                      f"{number}\n"
+                  )
+
+                  f.write(
+                      f"{timestamp(start)} --> "
+                      f"{timestamp(end)}\n"
+                  )
+
+                  f.write(
+                      " ".join(chunk)
+                  )
+
+                  f.write("\n\n")
+
+          print("Captions generated.")
+
+          PY
+
+
+      # ==========================================================
+      # 16. CREATE ROYALTY-FREE MUSIC
+      # ==========================================================
+
+      - name: Create background music
+        run: |
+
           ffmpeg -y \
             -f lavfi \
-            -i "color=c=black:s=1080x1920:r=30" \
-            -t 15 \
-            background.mp4
+            -i "sine=frequency=110:sample_rate=44100" \
+            -f lavfi \
+            -i "sine=frequency=165:sample_rate=44100" \
+            -filter_complex \
+            "[0:a]volume=0.02[a0];[1:a]volume=0.012[a1];[a0][a1]amix=inputs=2:duration=longest" \
+            -t 900 \
+            music.wav
 
-      - name: Add voice to video
+          test -s music.wav
+
+
+      # ==========================================================
+      # 17. GET VOICEOVER DURATION
+      # ==========================================================
+
+      - name: Get duration
         run: |
+
+          ffprobe \
+            -v error \
+            -show_entries format=duration \
+            -of default=noprint_wrappers=1:nokey=1 \
+            voiceover.wav \
+            > duration.txt
+
+          cat duration.txt
+
+
+      # ==========================================================
+      # 18. CREATE VISUAL CLIPS
+      # ==========================================================
+
+      - name: Create visual clips
+        run: |
+
+          DURATION=$(cat duration.txt)
+
+          if [ "${{ steps.video_type.outputs.type }}" = "short" ]; then
+
+            WIDTH=1080
+            HEIGHT=1920
+            TOTAL=5
+
+          else
+
+            WIDTH=1920
+            HEIGHT=1080
+            TOTAL=12
+
+          fi
+
+          CLIP_DURATION=$(python3 -c "
+          d=float('$DURATION')
+          n=$TOTAL
+          print(max(d/n,1))
+          ")
+
+          echo "Clip duration: $CLIP_DURATION"
+
+          for i in $(seq 1 $TOTAL)
+          do
+
+            echo "Creating clip $i"
+
+            ffmpeg -y \
+              -loop 1 \
+              -i "image${i}.jpg" \
+              -t "$CLIP_DURATION" \
+              -vf "scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},zoompan=z='min(zoom+0.0007,1.08)':d=1:s=${WIDTH}x${HEIGHT}:fps=30" \
+              -r 30 \
+              -pix_fmt yuv420p \
+              -an \
+              "clip${i}.mp4"
+
+          done
+
+
+      # ==========================================================
+      # 19. JOIN VISUAL CLIPS
+      # ==========================================================
+
+      - name: Join visual clips
+        run: |
+
+          if [ "${{ steps.video_type.outputs.type }}" = "short" ]; then
+            TOTAL=5
+          else
+            TOTAL=12
+          fi
+
+          rm -f concat.txt
+
+          for i in $(seq 1 $TOTAL)
+          do
+            echo "file 'clip${i}.mp4'" >> concat.txt
+          done
+
           ffmpeg -y \
-            -i background.mp4 \
+            -f concat \
+            -safe 0 \
+            -i concat.txt \
+            -c copy \
+            visuals.mp4
+
+
+      # ==========================================================
+      # 20. CREATE FINAL VIDEO
+      # ==========================================================
+
+      - name: Create final video
+        run: |
+
+          if [ "${{ steps.video_type.outputs.type }}" = "short" ]; then
+
+            WIDTH=1080
+            HEIGHT=1920
+            OUTPUT=short.mp4
+            FONT_SIZE=18
+            MARGIN=180
+
+          else
+
+            WIDTH=1920
+            HEIGHT=1080
+            OUTPUT=full-video.mp4
+            FONT_SIZE=14
+            MARGIN=80
+
+          fi
+
+          ffmpeg -y \
+            -i visuals.mp4 \
             -i voiceover.wav \
+            -i music.wav \
+            -filter_complex \
+            "[2:a]volume=0.08[music];[1:a]volume=1.0[voice];[voice][music]amix=inputs=2:duration=first[audio]" \
+            -map 0:v \
+            -map "[audio]" \
+            -vf "subtitles=captions.srt:force_style='FontName=DejaVu Sans,FontSize=${FONT_SIZE},Bold=1,Alignment=2,MarginV=${MARGIN}'" \
             -c:v libx264 \
+            -preset veryfast \
+            -crf 23 \
             -c:a aac \
+            -b:a 128k \
             -shortest \
             -pix_fmt yuv420p \
-            short.mp4
+            -movflags +faststart \
+            "$OUTPUT"
 
-      - name: Upload final video
+          test -s "$OUTPUT"
+
+
+      # ==========================================================
+      # 21. VALIDATE VIDEO
+      # ==========================================================
+
+      - name: Validate final video
+        run: |
+
+          if [ "${{ steps.video_type.outputs.type }}" = "short" ]; then
+            VIDEO="short.mp4"
+            EXPECTED="1080x1920"
+          else
+            VIDEO="full-video.mp4"
+            EXPECTED="1920x1080"
+          fi
+
+          echo "Validating $VIDEO"
+
+          ffprobe \
+            -v error \
+            "$VIDEO"
+
+          DIMENSIONS=$(ffprobe \
+            -v error \
+            -select_streams v:0 \
+            -show_entries stream=width,height \
+            -of csv=s=x:p=0 \
+            "$VIDEO")
+
+          echo "Dimensions: $DIMENSIONS"
+
+          if [ "$DIMENSIONS" != "$EXPECTED" ]; then
+            echo "ERROR: Wrong dimensions."
+            exit 1
+          fi
+
+          AUDIO=$(ffprobe \
+            -v error \
+            -select_streams a \
+            -show_entries stream=index \
+            -of csv=p=0 \
+            "$VIDEO")
+
+          if [ -z "$AUDIO" ]; then
+            echo "ERROR: No audio."
+            exit 1
+          fi
+
+          DURATION=$(ffprobe \
+            -v error \
+            -show_entries format=duration \
+            -of default=noprint_wrappers=1:nokey=1 \
+            "$VIDEO")
+
+          echo "Final duration: $DURATION"
+
+          echo "VIDEO VALIDATION PASSED."
+
+
+      # ==========================================================
+      # 22. SAVE ARTIFACTS
+      # ==========================================================
+
+      - name: Upload generated files
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-short
-          path: short.mp4
+
+          name: youtube-${{ steps.video_type.outputs.type }}
+
+          path: |
+            short.mp4
+            full-video.mp4
+            title.txt
+            description.txt
+            tags.txt
+            script.txt
+            story.txt
+            captions.srt
+            voiceover.wav
+            image*.jpg
+
+
+      # ==========================================================
+      # 23. SHOW RESULT
+      # ==========================================================
+
+      - name: Show result
+        run: |
+
+          echo ""
+          echo "=========================================="
+          echo "       AI YOUTUBE VIDEO CREATED"
+          echo "=========================================="
+
+          echo ""
+          echo "VIDEO TYPE:"
+          echo "${{ steps.video_type.outputs.type }}"
+
+          echo ""
+          echo "TITLE:"
+          cat title.txt
+
+          echo ""
+          echo "DESCRIPTION:"
+          cat description.txt
+
+          echo ""
+          echo "TAGS:"
+          cat tags.txt
+
+          echo ""
+          echo "FILES:"
+          ls -lh *.mp4 *.wav *.srt *.jpg 2>/dev/null || true
+
+
+      # ==========================================================
+      # 24. SAVE HISTORY
+      # ==========================================================
+
+      - name: Update content history
+        run: |
+
+          mkdir -p data
+
+          if [ ! -f data/content_history.txt ]; then
+            touch data/content_history.txt
+          fi
+
+          DATE=$(date -u +"%Y-%m-%d")
+
+          {
+            echo "DATE: $DATE"
+            echo "TYPE: ${{ steps.video_type.outputs.type }}"
+            echo "TITLE: $(cat title.txt)"
+            echo ""
+          } >> data/content_history.txt
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/content_history.txt
+
+          git commit \
+            -m "Update YouTube content history" \
+            || echo "Nothing to commit."
+
+          git push \
+            || echo "Could not push history."
+
+
+      # ==========================================================
+      # 25. SHOW OLLAMA LOG IF SOMETHING FAILS
+      # ==========================================================
+
+      - name: Show logs
+        if: always()
+        run: |
+
+          echo "========== OLLAMA LOG =========="
+
+          cat ollama.log 2>/dev/null || true
