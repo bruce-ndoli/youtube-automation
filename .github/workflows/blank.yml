@@ -192,308 +192,283 @@ jobs:
 
 
       # ============================================================
-      # 10. CREATE AI PROMPT
-      # ============================================================
-
-      - name: Create AI prompt
-        run: |
-
-          cat > prompt.txt <<'PROMPT'
-
-          You are an expert YouTube Shorts producer.
-
-          Your job is to create ONE original YouTube Shorts story
-          about a recent AI or technology news event.
-
-          IMPORTANT:
-
-          Use ONLY information contained in the NEWS ARTICLES.
-
-          Do not invent facts.
-
-          Do not invent statistics.
-
-          Do not invent quotes.
-
-          Do not invent people.
-
-          Do not invent events.
-
-          The final narration must be between approximately
-          30 and 60 seconds.
-
-          Use simple natural English.
-
-          Start with a strong hook.
-
-          Keep the viewer curious.
-
-          The narration must be original storytelling.
-
-          Do not use emojis.
-
-          Do not use bullet points in the narration.
-
-          Do not put headings inside the narration.
-
-          Create exactly FIVE visual scenes.
-
-          All five scenes must describe the SAME story.
-
-          Each scene must be visually different.
-
-          Visual prompts must describe realistic cinematic
-          technology journalism.
-
-          Visual prompts must contain:
-
-          No text.
-          No watermark.
-          No logo.
-
-          RETURN EXACTLY THIS FORMAT:
-
-          TITLE:
-          [short title]
-
-          DESCRIPTION:
-          [short YouTube description]
-
-          SCRIPT:
-          [30-60 second narration]
-
-          SCENE1:
-          [visual prompt]
-
-          SCENE2:
-          [visual prompt]
-
-          SCENE3:
-          [visual prompt]
-
-          SCENE4:
-          [visual prompt]
-
-          SCENE5:
-          [visual prompt]
-
-          TAGS:
-          [comma separated tags]
-
-          NEWS ARTICLES:
-
-          PROMPT
-
-          cat articles.txt >> prompt.txt
-
-          echo "AI prompt created."
-
-
-      # ============================================================
-      # 11. GENERATE STORY
+      # 10. GENERATE AI STORY
       # ============================================================
 
       - name: Generate AI story
         run: |
 
-          ollama run tinyllama "$(cat prompt.txt)" > story.txt
+          python3 <<'PY'
 
-          test -s story.txt
+          import subprocess
 
-          echo "=============================="
-          echo "GENERATED AI STORY"
-          echo "=============================="
+          news = open("articles.txt", encoding="utf-8").read()
 
-          cat story.txt
+          prompt = f"""
+You are a YouTube Shorts writer.
+
+Read the news below.
+
+Choose ONE interesting AI or technology story.
+
+Write a narration for a 30 to 60 second YouTube Short.
+
+Rules:
+- Use only information from the news.
+- Do not invent facts.
+- Do not invent statistics.
+- Do not invent quotes.
+- Use simple English.
+- Start with a strong hook.
+- Make it interesting.
+- Keep sentences short.
+- Do not use headings.
+- Do not use bullet points.
+- Do not use emojis.
+- Write ONLY the narration.
+- Do not explain what you are doing.
+
+NEWS:
+
+{news}
+"""
+
+          result = subprocess.run(
+              ["ollama", "run", "tinyllama", prompt],
+              capture_output=True,
+              text=True
+          )
+
+          if result.returncode != 0:
+              print(result.stderr)
+              raise RuntimeError("Ollama failed.")
+
+          story = result.stdout.strip()
+
+          if not story:
+              raise RuntimeError("AI returned an empty story.")
+
+          open("script.txt", "w", encoding="utf-8").write(story)
+
+          print("")
+          print("==============================")
+          print("AI STORY")
+          print("==============================")
+          print(story)
+
+          PY
 
 
       # ============================================================
-      # 12. PARSE AI OUTPUT
+      # 11. CREATE VIDEO METADATA
       # ============================================================
 
-      - name: Parse AI output
+      - name: Create video metadata
         run: |
 
           python3 <<'PY'
 
-          import re
-          import sys
-
-          text = open(
-              "story.txt",
+          script = open(
+              "script.txt",
               encoding="utf-8"
-          ).read()
+          ).read().strip()
 
-          def extract(start, end):
-
-              pattern = (
-                  rf"^\s*{start}\s*:\s*(.*?)"
-                  rf"(?=^\s*{end}\s*:)"
-              )
-
-              match = re.search(
-                  pattern,
-                  text,
-                  re.IGNORECASE |
-                  re.MULTILINE |
-                  re.DOTALL
-              )
-
-              if not match:
-                  return ""
-
-              return match.group(1).strip()
-
-
-          title = extract(
-              "TITLE",
-              "DESCRIPTION"
-          )
-
-          description = extract(
-              "DESCRIPTION",
-              "SCRIPT"
-          )
-
-          script = extract(
-              "SCRIPT",
-              "SCENE1"
-          )
-
-          scene1 = extract(
-              "SCENE1",
-              "SCENE2"
-          )
-
-          scene2 = extract(
-              "SCENE2",
-              "SCENE3"
-          )
-
-          scene3 = extract(
-              "SCENE3",
-              "SCENE4"
-          )
-
-          scene4 = extract(
-              "SCENE4",
-              "SCENE5"
-          )
-
-          scene5 = extract(
-              "SCENE5",
-              "TAGS"
-          )
-
-          tags = re.search(
-              r"^\s*TAGS\s*:\s*(.*)$",
-              text,
-              re.IGNORECASE |
-              re.MULTILINE |
-              re.DOTALL
-          )
-
-          tags_text = ""
-
-          if tags:
-              tags_text = tags.group(1).strip()
-
-
-          # --------------------------------------------------------
-          # VALIDATION
-          # --------------------------------------------------------
-
-          if not title:
-              print("ERROR: Title was not generated.")
-              sys.exit(1)
-
-          if not script:
-              print("ERROR: Script was not generated.")
-              sys.exit(1)
-
-          if len(script.split()) < 50:
-              print("ERROR: Script is too short.")
-              print(script)
-              sys.exit(1)
-
-          scenes = [
-              scene1,
-              scene2,
-              scene3,
-              scene4,
-              scene5
+          sentences = [
+              s.strip()
+              for s in script.replace("!", ".").replace("?", ".").split(".")
+              if s.strip()
           ]
 
-          for i, scene in enumerate(scenes, 1):
+          if sentences:
+              title = sentences[0]
+          else:
+              title = "The Latest AI News"
+
+          if len(title) > 90:
+              title = title[:87] + "..."
+
+          description = (
+              "Discover the latest AI and technology news "
+              "in this short video.\n\n"
+              + script
+              + "\n\n"
+              "#AI #ArtificialIntelligence #Technology "
+              "#TechNews #Innovation"
+          )
+
+          tags = (
+              "AI, artificial intelligence, technology, "
+              "AI news, tech news, innovation, robots, "
+              "future technology, machine learning"
+          )
+
+          open("title.txt", "w", encoding="utf-8").write(title)
+          open("description.txt", "w", encoding="utf-8").write(description)
+          open("tags.txt", "w", encoding="utf-8").write(tags)
+
+          print("")
+          print("==============================")
+          print("VIDEO METADATA")
+          print("==============================")
+          print("")
+          print("TITLE:")
+          print(title)
+          print("")
+          print("DESCRIPTION:")
+          print(description)
+          print("")
+          print("TAGS:")
+          print(tags)
+
+          PY
+
+
+      # ============================================================
+      # 12. GENERATE FIVE SCENE DESCRIPTIONS
+      # ============================================================
+
+      - name: Generate five scene descriptions
+        run: |
+
+          python3 <<'PY'
+
+          import subprocess
+
+          script = open(
+              "script.txt",
+              encoding="utf-8"
+          ).read().strip()
+
+          prompt = f"""
+You are creating visual prompts for a YouTube Shorts video.
+
+VIDEO STORY:
+
+{script}
+
+Create exactly five different visual scenes that match this story.
+
+Rules:
+- The five scenes must describe the SAME story.
+- Each scene must be visually different.
+- Make them realistic.
+- Make them cinematic.
+- Make them suitable for a technology news video.
+- Do not include text.
+- Do not include subtitles.
+- Do not include watermarks.
+- Do not include logos.
+- Do not invent events that contradict the story.
+- Keep each scene description short.
+- Write ONLY the five scenes.
+- Use this exact format:
+
+SCENE 1: ...
+SCENE 2: ...
+SCENE 3: ...
+SCENE 4: ...
+SCENE 5: ...
+"""
+
+          result = subprocess.run(
+              ["ollama", "run", "tinyllama", prompt],
+              capture_output=True,
+              text=True
+          )
+
+          if result.returncode != 0:
+              print(result.stderr)
+              raise RuntimeError("AI scene generation failed.")
+
+          output = result.stdout.strip()
+
+          print("")
+          print("==============================")
+          print("AI SCENE OUTPUT")
+          print("==============================")
+          print(output)
+
+          lines = output.splitlines()
+          scenes = []
+          current = ""
+
+          for line in lines:
+
+              clean = line.strip()
+
+              if not clean:
+                  continue
+
+              upper = clean.upper()
+
+              if upper.startswith("SCENE 1:"):
+                  if current:
+                      scenes.append(current)
+                  current = clean[len("SCENE 1:"):].strip()
+
+              elif upper.startswith("SCENE 2:"):
+                  if current:
+                      scenes.append(current)
+                  current = clean[len("SCENE 2:"):].strip()
+
+              elif upper.startswith("SCENE 3:"):
+                  if current:
+                      scenes.append(current)
+                  current = clean[len("SCENE 3:"):].strip()
+
+              elif upper.startswith("SCENE 4:"):
+                  if current:
+                      scenes.append(current)
+                  current = clean[len("SCENE 4:"):].strip()
+
+              elif upper.startswith("SCENE 5:"):
+                  if current:
+                      scenes.append(current)
+                  current = clean[len("SCENE 5:"):].strip()
+
+              else:
+                  if current:
+                      current += " " + clean
+
+          if current:
+              scenes.append(current)
+
+          if len(scenes) < 5:
+              print("")
+              print("AI did not produce five scenes.")
+              print("Scenes found:", len(scenes))
+              raise RuntimeError("Could not parse five AI scenes.")
+
+          for i in range(5):
+
+              scene = scenes[i].strip()
 
               if not scene:
-                  print(
-                      f"ERROR: Scene {i} was not generated."
+                  raise RuntimeError(
+                      f"Scene {i + 1} is empty."
                   )
 
-                  sys.exit(1)
-
-
-          # --------------------------------------------------------
-          # SAVE FILES
-          # --------------------------------------------------------
-
-          open(
-              "title.txt",
-              "w",
-              encoding="utf-8"
-          ).write(title)
-
-          open(
-              "description.txt",
-              "w",
-              encoding="utf-8"
-          ).write(description)
-
-          open(
-              "script.txt",
-              "w",
-              encoding="utf-8"
-          ).write(script)
-
-          open(
-              "tags.txt",
-              "w",
-              encoding="utf-8"
-          ).write(tags_text)
-
-
-          for i, scene in enumerate(scenes, 1):
-
               open(
-                  f"scene{i}.txt",
+                  f"scene{i + 1}.txt",
                   "w",
                   encoding="utf-8"
               ).write(scene)
 
-
+          print("")
           print("==============================")
-          print("TITLE")
-          print("==============================")
-
-          print(title)
-
-          print()
-          print("==============================")
-          print("SCRIPT")
+          print("SCENES CREATED SUCCESSFULLY")
           print("==============================")
 
-          print(script)
+          for i in range(1, 6):
 
-          print()
-          print("==============================")
-          print("SCENES")
-          print("==============================")
-
-          for i, scene in enumerate(scenes, 1):
-
-              print(f"\nSCENE {i}")
-              print(scene)
+              print("")
+              print(f"SCENE {i}:")
+              print(
+                  open(
+                      f"scene{i}.txt",
+                      encoding="utf-8"
+                  ).read()
+              )
 
           PY
 
