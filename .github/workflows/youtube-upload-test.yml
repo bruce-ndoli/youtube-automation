@@ -8,19 +8,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Install Python packages
         run: |
-          python3 -m pip install google-api-python-client google-auth google-auth-oauthlib
+          python3 -m pip install --upgrade pip
+          python3 -m pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2
 
       - name: Create credentials file
         env:
           YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
+        shell: bash
         run: |
-          printf '%s' "$YOUTUBE_TOKEN" > token.json
+          set -euo pipefail
+
+          if [ -z "${YOUTUBE_TOKEN:-}" ]; then
+            echo "YOUTUBE_TOKEN secret is empty."
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import json
+          import os
+
+          raw = os.environ["YOUTUBE_TOKEN"]
+          try:
+              json.loads(raw)
+          except json.JSONDecodeError as exc:
+              raise SystemExit(f"YOUTUBE_TOKEN must be valid JSON: {exc}") from exc
+
+          with open("token.json", "w", encoding="utf-8") as f:
+              f.write(raw)
+          PY
 
       - name: Create test video
+        shell: bash
         run: |
+          set -euo pipefail
+
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
@@ -36,10 +62,11 @@ jobs:
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+        shell: bash
         run: |
+          set -euo pipefail
 
           python3 <<'PY'
-
           import json
           import os
 
@@ -47,55 +74,52 @@ jobs:
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
 
-          token_data = json.load(
-              open("token.json", encoding="utf-8")
-          )
+          with open("token.json", encoding="utf-8") as f:
+              token_data = json.load(f)
+
+          required_fields = ["token", "refresh_token"]
+          missing = [field for field in required_fields if not token_data.get(field)]
+
+          if missing:
+              raise SystemExit(
+                  "token.json is missing required values: " + ", ".join(missing)
+              )
 
           credentials = Credentials(
               token=token_data.get("token"),
               refresh_token=token_data.get("refresh_token"),
               token_uri=token_data.get(
                   "token_uri",
-                  "https://oauth2.googleapis.com/token"
+                  "https://oauth2.googleapis.com/token",
               ),
-              client_id=os.environ["YOUTUBE_CLIENT_ID"],
-              client_secret=os.environ["YOUTUBE_CLIENT_SECRET"],
-              scopes=[
-                  "https://www.googleapis.com/auth/youtube.upload"
-              ]
+              client_id=token_data.get("client_id") or os.environ["YOUTUBE_CLIENT_ID"],
+              client_secret=token_data.get("client_secret") or os.environ["YOUTUBE_CLIENT_SECRET"],
+              scopes=["https://www.googleapis.com/auth/youtube.upload"],
           )
 
-          youtube = build(
-              "youtube",
-              "v3",
-              credentials=credentials
-          )
+          youtube = build("youtube", "v3", credentials=credentials)
 
           body = {
               "snippet": {
                   "title": "YouTube Automation Test",
                   "description": "Private test upload from GitHub Actions.",
-                  "tags": [
-                      "test",
-                      "automation"
-                  ],
-                  "categoryId": "22"
+                  "tags": ["test", "automation"],
+                  "categoryId": "22",
               },
-              "status": {
-                  "privacyStatus": "private"
-              }
+              "status": {"privacyStatus": "private"},
           }
 
           media = MediaFileUpload(
               "test-video.mp4",
               mimetype="video/mp4",
-              resumable=True
+              resumable=True,
           )
 
           request = youtube.videos().insert(
               part="snippet,status",
               body=body,
-              media_body=media
+              media_body=media,
+              notifySubscribers=False,
           )
 
           response = request.execute()
@@ -104,5 +128,4 @@ jobs:
           print("YOUTUBE UPLOAD SUCCESSFUL")
           print("====================================")
           print("Video ID:", response["id"])
-
           PY
