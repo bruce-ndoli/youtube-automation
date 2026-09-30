@@ -6,7 +6,7 @@ on:
   schedule:
     # Monday-Saturday at 11:30 AM Rwanda time
     # Rwanda = UTC+2
-    # 11:30 AM Rwanda = 09:30 UTC
+    # 11:30 Rwanda = 09:30 UTC
     - cron: "30 9 * * 1-6"
 
 permissions:
@@ -42,7 +42,8 @@ jobs:
             python3 \
             python3-pip \
             curl \
-            jq
+            jq \
+            fonts-dejavu
 
           echo "System tools installed."
 
@@ -78,11 +79,11 @@ jobs:
 
           mkdir -p models
 
-          curl -L --retry 3 \
+          curl -L --retry 3 --retry-delay 5 \
             "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx?download=true" \
             -o models/en_US-lessac-medium.onnx
 
-          curl -L --retry 3 \
+          curl -L --retry 3 --retry-delay 5 \
             "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json?download=true" \
             -o models/en_US-lessac-medium.onnx.json
 
@@ -119,7 +120,7 @@ jobs:
 
           for i in {1..30}; do
 
-            if curl -s http://127.0.0.1:11434/api/tags > /dev/null; then
+            if curl -sf http://127.0.0.1:11434/api/tags > /dev/null; then
               echo "Ollama is ready."
               exit 0
             fi
@@ -167,8 +168,6 @@ jobs:
 
           echo "News downloaded."
 
-          head -40 news.xml
-
 
       # ============================================================
       # 9. EXTRACT NEWS ARTICLES
@@ -180,6 +179,8 @@ jobs:
           python3 <<'PY'
 
           import feedparser
+          import html
+          import re
 
           feed = feedparser.parse("news.xml")
 
@@ -193,6 +194,10 @@ jobs:
                   title = entry.get("title", "")
                   summary = entry.get("summary", "")
                   link = entry.get("link", "")
+
+                  summary = html.unescape(summary)
+                  summary = re.sub("<[^>]+>", " ", summary)
+                  summary = re.sub(r"\s+", " ", summary).strip()
 
                   f.write(
                       f"ARTICLE {i}\n"
@@ -213,18 +218,373 @@ jobs:
 
 
       # ============================================================
-      # 10. VERIFY VIDEO
-      #
-      # Your existing video-generation steps must create:
-      #
-      # final-video.mp4
-      #
-      # If they create another filename, change VIDEO below.
+      # 10. SELECT THE NEWS STORY
+      # ============================================================
+
+      - name: Select AI story
+        shell: bash
+        run: |
+
+          set -euo pipefail
+
+          python3 <<'PY'
+
+          import json
+          import requests
+
+          with open(
+              "articles.txt",
+              encoding="utf-8"
+          ) as f:
+              articles = f.read()
+
+          prompt = f"""
+          You are selecting one news story for a YouTube Short.
+
+          Choose the most interesting recent artificial intelligence
+          or technology story from the articles below.
+
+          Return ONLY the number of the article.
+
+          ARTICLES:
+
+          {articles}
+          """
+
+          response = requests.post(
+              "http://127.0.0.1:11434/api/generate",
+              json={
+                  "model": "tinyllama",
+                  "prompt": prompt,
+                  "stream": False
+              },
+              timeout=120
+          )
+
+          response.raise_for_status()
+
+          result = response.json().get("response", "")
+
+          print("AI selection:")
+          print(result)
+
+          import re
+
+          numbers = re.findall(
+              r"\b(?:ARTICLE\s*)?([1-9]|10)\b",
+              result.upper()
+          )
+
+          selected = int(numbers[0]) if numbers else 1
+
+          if selected < 1 or selected > 10:
+              selected = 1
+
+          print("Selected article:", selected)
+
+          with open(
+              "selected_article_number.txt",
+              "w"
+          ) as f:
+              f.write(str(selected))
+
+          PY
+
+
+      # ============================================================
+      # 11. CREATE SCRIPT
+      # ============================================================
+
+      - name: Create AI video script
+        shell: bash
+        run: |
+
+          set -euo pipefail
+
+          python3 <<'PY'
+
+          import requests
+          import re
+
+          with open(
+              "articles.txt",
+              encoding="utf-8"
+          ) as f:
+              articles = f.read()
+
+          with open(
+              "selected_article_number.txt"
+          ) as f:
+              selected = int(f.read().strip())
+
+          blocks = articles.split("ARTICLE ")
+
+          if selected >= len(blocks):
+              selected = 1
+
+          article = blocks[selected]
+
+          prompt = f"""
+          Create a short YouTube Shorts narration about this AI news story.
+
+          RULES:
+
+          - 90 to 120 words.
+          - Start with a strong hook.
+          - Explain what happened.
+          - Explain why it matters.
+          - Keep the language simple.
+          - Do not invent facts.
+          - Do not mention that you are an AI.
+          - Do not use headings.
+          - Return ONLY the narration.
+
+          NEWS:
+
+          {article}
+          """
+
+          response = requests.post(
+              "http://127.0.0.1:11434/api/generate",
+              json={
+                  "model": "tinyllama",
+                  "prompt": prompt,
+                  "stream": False
+              },
+              timeout=180
+          )
+
+          response.raise_for_status()
+
+          script = response.json().get(
+              "response",
+              ""
+          ).strip()
+
+          script = re.sub(
+              r"^(SCRIPT|NARRATION)\s*:\s*",
+              "",
+              script,
+              flags=re.IGNORECASE
+          )
+
+          if len(script.split()) < 30:
+              raise RuntimeError(
+                  "AI generated script is too short."
+              )
+
+          with open(
+              "script.txt",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              f.write(script)
+
+          print("====================================")
+          print("GENERATED SCRIPT")
+          print("====================================")
+          print(script)
+
+          PY
+
+
+      # ============================================================
+      # 12. CREATE YOUTUBE TITLE
+      # ============================================================
+
+      - name: Create YouTube title
+        run: |
+
+          set -euo pipefail
+
+          python3 <<'PY'
+
+          import requests
+          import re
+
+          with open(
+              "script.txt",
+              encoding="utf-8"
+          ) as f:
+              script = f.read()
+
+          prompt = f"""
+          Create one short YouTube Shorts title for this AI news story.
+
+          Rules:
+          - Maximum 70 characters.
+          - Make it interesting.
+          - No fake claims.
+          - No quotation marks.
+          - Return ONLY the title.
+
+          STORY:
+
+          {script}
+          """
+
+          response = requests.post(
+              "http://127.0.0.1:11434/api/generate",
+              json={
+                  "model": "tinyllama",
+                  "prompt": prompt,
+                  "stream": False
+              },
+              timeout=120
+          )
+
+          response.raise_for_status()
+
+          title = response.json().get(
+              "response",
+              ""
+          ).strip()
+
+          title = title.replace(
+              "\n",
+              " "
+          )
+
+          title = re.sub(
+              r"^(TITLE|YOUTUBE TITLE)\s*:\s*",
+              "",
+              title,
+              flags=re.IGNORECASE
+          )
+
+          title = title.strip(
+              "\"' "
+          )
+
+          if not title:
+              title = "The Latest AI News You Need to Know"
+
+          title = title[:70]
+
+          with open(
+              "youtube_title.txt",
+              "w",
+              encoding="utf-8"
+          ) as f:
+              f.write(title)
+
+          print("YouTube title:", title)
+
+          PY
+
+
+      # ============================================================
+      # 13. CREATE YOUTUBE DESCRIPTION
+      # ============================================================
+
+      - name: Create YouTube description
+        run: |
+
+          cat > youtube_description.txt <<'EOF'
+          Latest AI and technology news explained in a short and simple video.
+
+          #AI #ArtificialIntelligence #Tech #AInews #Shorts
+          EOF
+
+          echo "YouTube description created."
+
+
+      # ============================================================
+      # 14. GENERATE VOICEOVER
+      # ============================================================
+
+      - name: Generate voiceover
+        shell: bash
+        run: |
+
+          set -euo pipefail
+
+          python3 -m piper \
+            -m models/en_US-lessac-medium.onnx \
+            --config models/en_US-lessac-medium.onnx.json \
+            -f voice.wav \
+            < script.txt
+
+          test -s voice.wav
+
+          echo "Voiceover created."
+
+          ls -lh voice.wav
+
+
+      # ============================================================
+      # 15. CREATE VISUAL BACKGROUND
+      # ============================================================
+
+      - name: Create video background
+        run: |
+
+          set -euo pipefail
+
+          ffmpeg -y \
+            -f lavfi \
+            -i "color=c=0x101820:s=1080x1920:r=30" \
+            -t 30 \
+            -c:v libx264 \
+            -pix_fmt yuv420p \
+            background.mp4
+
+          test -s background.mp4
+
+          echo "Background created."
+
+
+      # ============================================================
+      # 16. CREATE FINAL VIDEO
+      # ============================================================
+
+      - name: Render final video
+        shell: bash
+        run: |
+
+          set -euo pipefail
+
+          echo "Rendering final-video.mp4..."
+
+          DURATION=$(ffprobe \
+            -v error \
+            -show_entries format=duration \
+            -of default=noprint_wrappers=1:nokey=1 \
+            voice.wav)
+
+          echo "Voice duration: $DURATION seconds"
+
+          ffmpeg -y \
+            -stream_loop -1 \
+            -i background.mp4 \
+            -i voice.wav \
+            -t "$DURATION" \
+            -vf "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2" \
+            -c:v libx264 \
+            -preset veryfast \
+            -pix_fmt yuv420p \
+            -c:a aac \
+            -b:a 128k \
+            -shortest \
+            final-video.mp4
+
+          test -s final-video.mp4
+
+          echo "===================================="
+          echo "VIDEO CREATED SUCCESSFULLY"
+          echo "===================================="
+
+          ls -lh final-video.mp4
+
+
+      # ============================================================
+      # 17. VERIFY FINAL VIDEO
       # ============================================================
 
       - name: Verify final generated video
         shell: bash
         run: |
+
           set -euo pipefail
 
           VIDEO="final-video.mp4"
@@ -235,15 +595,10 @@ jobs:
 
             echo "ERROR: $VIDEO was not found."
 
-            echo ""
-            echo "Files currently available:"
             find . -maxdepth 4 -type f | sort
 
-            echo ""
-            echo "Your video-generation/rendering steps must create:"
-            echo "$VIDEO"
-
             exit 1
+
           fi
 
           if [ ! -s "$VIDEO" ]; then
@@ -262,16 +617,14 @@ jobs:
 
           ffprobe \
             -v error \
-            -show_entries \
-            format=duration,size \
-            -show_entries \
-            stream=codec_name,width,height \
+            -show_entries format=duration,size \
+            -show_entries stream=codec_name,width,height \
             -of default=noprint_wrappers=1 \
             "$VIDEO"
 
 
       # ============================================================
-      # 11. CREATE YOUTUBE CREDENTIALS
+      # 18. CREATE YOUTUBE CREDENTIALS
       # ============================================================
 
       - name: Create YouTube credentials file
@@ -301,14 +654,13 @@ jobs:
           except json.JSONDecodeError as exc:
               raise SystemExit(
                   f"YOUTUBE_TOKEN must be valid JSON: {exc}"
-              ) from exc
+              )
 
           with open(
               "token.json",
               "w",
               encoding="utf-8"
           ) as f:
-
               f.write(raw)
 
           print("YouTube token loaded successfully.")
@@ -317,7 +669,7 @@ jobs:
 
 
       # ============================================================
-      # 12. UPLOAD FINAL VIDEO TO YOUTUBE
+      # 19. UPLOAD FINAL VIDEO TO YOUTUBE
       # ============================================================
 
       - name: Upload final video to YouTube
@@ -352,7 +704,6 @@ jobs:
               "token.json",
               encoding="utf-8"
           ) as f:
-
               token_data = json.load(f)
 
 
@@ -370,7 +721,6 @@ jobs:
 
 
           if missing:
-
               raise SystemExit(
                   "token.json is missing required values: "
                   + ", ".join(missing)
@@ -422,52 +772,25 @@ jobs:
 
 
           # ========================================================
-          # TITLE
+          # READ TITLE
           # ========================================================
 
-          title = "AI News Today"
-
-
-          if os.path.exists(
-              "youtube_title.txt"
-          ):
-
-              with open(
-                  "youtube_title.txt",
-                  encoding="utf-8"
-              ) as f:
-
-                  generated_title = f.read().strip()
-
-                  if generated_title:
-                      title = generated_title
+          with open(
+              "youtube_title.txt",
+              encoding="utf-8"
+          ) as f:
+              title = f.read().strip()
 
 
           # ========================================================
-          # DESCRIPTION
+          # READ DESCRIPTION
           # ========================================================
 
-          description = (
-              "Latest artificial intelligence "
-              "and technology news."
-          )
-
-
-          if os.path.exists(
-              "youtube_description.txt"
-          ):
-
-              with open(
-                  "youtube_description.txt",
-                  encoding="utf-8"
-              ) as f:
-
-                  generated_description = (
-                      f.read().strip()
-                  )
-
-                  if generated_description:
-                      description = generated_description
+          with open(
+              "youtube_description.txt",
+              encoding="utf-8"
+          ) as f:
+              description = f.read().strip()
 
 
           # ========================================================
@@ -488,8 +811,8 @@ jobs:
                       "AI News",
                       "Technology",
                       "Tech News",
-                      "Artificial Intelligence News",
-                      "AI Shorts"
+                      "AI Shorts",
+                      "Shorts"
                   ],
 
                   "categoryId": "28",
@@ -579,7 +902,7 @@ jobs:
 
 
       # ============================================================
-      # 13. FINAL SUCCESS MESSAGE
+      # 20. FINAL RESULT
       # ============================================================
 
       - name: Automation completed
@@ -597,6 +920,6 @@ jobs:
           ls -lh final-video.mp4
 
           echo ""
-          echo "YouTube upload completed successfully."
+          echo "YouTube upload completed."
 
           echo "============================================"
