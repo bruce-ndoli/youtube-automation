@@ -1,0 +1,6 @@
+- name: Trigger upload workflow
+  if: success()
+  env:
+    GH_TOKEN: ${{ github.token }}
+  run: |
+    gh workflow run "YouTube Upload Test" --ref "${{ github.ref_name }}"
