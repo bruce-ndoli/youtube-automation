@@ -4,15 +4,16 @@ on:
   workflow_dispatch:
 
   schedule:
-    # Monday-Saturday at 11:00 AM Rwanda time
-    # Rwanda = UTC+2, so 11:00 AM = 09:00 UTC
-    - cron: "0 9 * * 1-6"
+    # Monday-Saturday at 11:30 AM Rwanda time
+    # Rwanda = UTC+2
+    # 11:30 AM Rwanda = 09:30 UTC
+    - cron: "30 9 * * 1-6"
 
 permissions:
   contents: write
 
 jobs:
-  create-short:
+  create-and-upload-short:
 
     runs-on: ubuntu-latest
 
@@ -32,7 +33,10 @@ jobs:
 
       - name: Install system tools
         run: |
+          set -euo pipefail
+
           sudo apt-get update
+
           sudo apt-get install -y \
             ffmpeg \
             python3 \
@@ -49,11 +53,17 @@ jobs:
 
       - name: Install Python packages
         run: |
+          set -euo pipefail
+
           python3 -m pip install \
             --break-system-packages \
             piper-tts \
             feedparser \
-            requests
+            requests \
+            google-api-python-client \
+            google-auth \
+            google-auth-oauthlib \
+            google-auth-httplib2
 
           echo "Python packages installed."
 
@@ -64,13 +74,15 @@ jobs:
 
       - name: Download Piper voice
         run: |
+          set -euo pipefail
+
           mkdir -p models
 
-          curl -L \
+          curl -L --retry 3 \
             "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx?download=true" \
             -o models/en_US-lessac-medium.onnx
 
-          curl -L \
+          curl -L --retry 3 \
             "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json?download=true" \
             -o models/en_US-lessac-medium.onnx.json
 
@@ -86,6 +98,8 @@ jobs:
 
       - name: Install Ollama
         run: |
+          set -euo pipefail
+
           curl -fsSL https://ollama.com/install.sh | sh
 
           echo "Ollama installed."
@@ -97,6 +111,8 @@ jobs:
 
       - name: Start Ollama
         run: |
+          set -euo pipefail
+
           ollama serve > ollama.log 2>&1 &
 
           echo "Waiting for Ollama..."
@@ -113,7 +129,9 @@ jobs:
           done
 
           echo "Ollama failed to start."
+
           cat ollama.log
+
           exit 1
 
 
@@ -123,6 +141,8 @@ jobs:
 
       - name: Download AI model
         run: |
+          set -euo pipefail
+
           ollama pull tinyllama
 
           echo "AI model downloaded."
@@ -134,6 +154,7 @@ jobs:
 
       - name: Get latest AI news
         run: |
+          set -euo pipefail
 
           curl \
             --retry 3 \
@@ -189,3 +210,393 @@ jobs:
           echo "=============================="
 
           cat articles.txt
+
+
+      # ============================================================
+      # 10. VERIFY VIDEO
+      #
+      # Your existing video-generation steps must create:
+      #
+      # final-video.mp4
+      #
+      # If they create another filename, change VIDEO below.
+      # ============================================================
+
+      - name: Verify final generated video
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VIDEO="final-video.mp4"
+
+          echo "Looking for final video..."
+
+          if [ ! -f "$VIDEO" ]; then
+
+            echo "ERROR: $VIDEO was not found."
+
+            echo ""
+            echo "Files currently available:"
+            find . -maxdepth 4 -type f | sort
+
+            echo ""
+            echo "Your video-generation/rendering steps must create:"
+            echo "$VIDEO"
+
+            exit 1
+          fi
+
+          if [ ! -s "$VIDEO" ]; then
+            echo "ERROR: $VIDEO is empty."
+            exit 1
+          fi
+
+          echo "===================================="
+          echo "FINAL VIDEO FOUND"
+          echo "===================================="
+
+          ls -lh "$VIDEO"
+
+          echo ""
+          echo "Video information:"
+
+          ffprobe \
+            -v error \
+            -show_entries \
+            format=duration,size \
+            -show_entries \
+            stream=codec_name,width,height \
+            -of default=noprint_wrappers=1 \
+            "$VIDEO"
+
+
+      # ============================================================
+      # 11. CREATE YOUTUBE CREDENTIALS
+      # ============================================================
+
+      - name: Create YouTube credentials file
+        env:
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN }}
+
+        shell: bash
+
+        run: |
+
+          set -euo pipefail
+
+          if [ -z "${YOUTUBE_TOKEN:-}" ]; then
+            echo "YOUTUBE_TOKEN secret is empty."
+            exit 1
+          fi
+
+          python3 <<'PY'
+
+          import json
+          import os
+
+          raw = os.environ["YOUTUBE_TOKEN"]
+
+          try:
+              json.loads(raw)
+          except json.JSONDecodeError as exc:
+              raise SystemExit(
+                  f"YOUTUBE_TOKEN must be valid JSON: {exc}"
+              ) from exc
+
+          with open(
+              "token.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
+
+              f.write(raw)
+
+          print("YouTube token loaded successfully.")
+
+          PY
+
+
+      # ============================================================
+      # 12. UPLOAD FINAL VIDEO TO YOUTUBE
+      # ============================================================
+
+      - name: Upload final video to YouTube
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+
+        shell: bash
+
+        run: |
+
+          set -euo pipefail
+
+          python3 <<'PY'
+
+          import json
+          import os
+
+          from google.oauth2.credentials import Credentials
+          from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
+
+
+          VIDEO_FILE = "final-video.mp4"
+
+
+          # ========================================================
+          # READ TOKEN
+          # ========================================================
+
+          with open(
+              "token.json",
+              encoding="utf-8"
+          ) as f:
+
+              token_data = json.load(f)
+
+
+          required_fields = [
+              "token",
+              "refresh_token"
+          ]
+
+
+          missing = [
+              field
+              for field in required_fields
+              if not token_data.get(field)
+          ]
+
+
+          if missing:
+
+              raise SystemExit(
+                  "token.json is missing required values: "
+                  + ", ".join(missing)
+              )
+
+
+          # ========================================================
+          # CREATE CREDENTIALS
+          # ========================================================
+
+          credentials = Credentials(
+
+              token=token_data.get("token"),
+
+              refresh_token=token_data.get(
+                  "refresh_token"
+              ),
+
+              token_uri=token_data.get(
+                  "token_uri",
+                  "https://oauth2.googleapis.com/token"
+              ),
+
+              client_id=(
+                  token_data.get("client_id")
+                  or os.environ["YOUTUBE_CLIENT_ID"]
+              ),
+
+              client_secret=(
+                  token_data.get("client_secret")
+                  or os.environ["YOUTUBE_CLIENT_SECRET"]
+              ),
+
+              scopes=[
+                  "https://www.googleapis.com/auth/youtube.upload"
+              ],
+          )
+
+
+          # ========================================================
+          # CONNECT TO YOUTUBE
+          # ========================================================
+
+          youtube = build(
+              "youtube",
+              "v3",
+              credentials=credentials
+          )
+
+
+          # ========================================================
+          # TITLE
+          # ========================================================
+
+          title = "AI News Today"
+
+
+          if os.path.exists(
+              "youtube_title.txt"
+          ):
+
+              with open(
+                  "youtube_title.txt",
+                  encoding="utf-8"
+              ) as f:
+
+                  generated_title = f.read().strip()
+
+                  if generated_title:
+                      title = generated_title
+
+
+          # ========================================================
+          # DESCRIPTION
+          # ========================================================
+
+          description = (
+              "Latest artificial intelligence "
+              "and technology news."
+          )
+
+
+          if os.path.exists(
+              "youtube_description.txt"
+          ):
+
+              with open(
+                  "youtube_description.txt",
+                  encoding="utf-8"
+              ) as f:
+
+                  generated_description = (
+                      f.read().strip()
+                  )
+
+                  if generated_description:
+                      description = generated_description
+
+
+          # ========================================================
+          # YOUTUBE METADATA
+          # ========================================================
+
+          body = {
+
+              "snippet": {
+
+                  "title": title,
+
+                  "description": description,
+
+                  "tags": [
+                      "AI",
+                      "Artificial Intelligence",
+                      "AI News",
+                      "Technology",
+                      "Tech News",
+                      "Artificial Intelligence News",
+                      "AI Shorts"
+                  ],
+
+                  "categoryId": "28",
+              },
+
+              "status": {
+
+                  "privacyStatus": "public",
+
+                  "selfDeclaredMadeForKids": False,
+              },
+          }
+
+
+          # ========================================================
+          # PREPARE VIDEO
+          # ========================================================
+
+          media = MediaFileUpload(
+
+              VIDEO_FILE,
+
+              mimetype="video/mp4",
+
+              resumable=True,
+          )
+
+
+          # ========================================================
+          # UPLOAD
+          # ========================================================
+
+          request = youtube.videos().insert(
+
+              part="snippet,status",
+
+              body=body,
+
+              media_body=media,
+
+              notifySubscribers=False,
+          )
+
+
+          print("====================================")
+          print("STARTING YOUTUBE UPLOAD")
+          print("====================================")
+
+
+          response = None
+
+
+          while response is None:
+
+              status, response = request.next_chunk()
+
+              if status:
+
+                  print(
+                      "Upload progress: "
+                      f"{int(status.progress() * 100)}%"
+                  )
+
+
+          # ========================================================
+          # SUCCESS
+          # ========================================================
+
+          video_id = response["id"]
+
+
+          print()
+          print("====================================")
+          print("YOUTUBE UPLOAD SUCCESSFUL")
+          print("====================================")
+
+          print("Video ID:", video_id)
+
+          print(
+              "https://www.youtube.com/watch?v="
+              + video_id
+          )
+
+          print("====================================")
+
+          PY
+
+
+      # ============================================================
+      # 13. FINAL SUCCESS MESSAGE
+      # ============================================================
+
+      - name: Automation completed
+        run: |
+
+          echo "============================================"
+          echo "AI YOUTUBE AUTOMATION COMPLETED"
+          echo "============================================"
+
+          echo "Scheduled time:"
+          echo "11:30 AM Rwanda time"
+
+          echo ""
+          echo "Final video:"
+          ls -lh final-video.mp4
+
+          echo ""
+          echo "YouTube upload completed successfully."
+
+          echo "============================================"
