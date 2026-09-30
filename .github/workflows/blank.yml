@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
 
   schedule:
-    # Monday-Saturday at 11:05 AM Rwanda time
-    # Rwanda = UTC+2, so 11:05 AM = 08:00 UTC
-    - cron: "5 9 * * 1-6"
+    # Monday-Saturday at 11:00 AM Rwanda time
+    # Rwanda = UTC+2, so 11:00 AM = 09:00 UTC
+    - cron: "0 9 * * 1-6"
 
 permissions:
   contents: write
